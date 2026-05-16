@@ -97,14 +97,7 @@ function applyMode() {
     }
   }
 
-  // staff defaults: today's date + remembered staff name
   if (mode === "staff") {
-    const d = new Date();
-    const today = d.toISOString().slice(0, 10);
-    const intake = document.getElementById("intake_date");
-    if (intake && !intake.value) intake.value = today;
-    const sig = document.getElementById("signature_date");
-    if (sig && !sig.value) sig.value = today;
     const staff = document.getElementById("staff_name");
     try {
       const saved = localStorage.getItem(STORAGE_KEY_STAFF);
@@ -116,6 +109,18 @@ function applyMode() {
       });
     }
   }
+}
+
+// Fill today's date into staff-mode date fields if blank. Idempotent —
+// safe to call repeatedly. Separated from applyMode() so it can run after
+// restoreDraft() without re-binding the staff_name input listener.
+function applyStaffDateDefaults() {
+  if (getMode() !== "staff") return;
+  const today = new Date().toISOString().slice(0, 10);
+  const intake = document.getElementById("intake_date");
+  if (intake && !intake.value) intake.value = today;
+  const sig = document.getElementById("signature_date");
+  if (sig && !sig.value) sig.value = today;
 }
 
 // =================================================================
@@ -203,6 +208,14 @@ function setFieldError(input, msg) {
   err.textContent = msg;
 }
 
+// Returns the input if its format is invalid (and tags the field with the error),
+// or null if absent/blank/valid. Lets callers chain `firstError ||= checkFormat(...)`.
+function checkFormat(input, validator, errorKey, lang) {
+  if (!input || !input.value.trim() || validator(input.value)) return null;
+  setFieldError(input, I18N.errors[errorKey][lang]);
+  return input;
+}
+
 function validateStep(section) {
   const lang = getLang();
   let firstError = null;
@@ -215,16 +228,8 @@ function validateStep(section) {
     }
   });
 
-  const phone = section.querySelector('input[name="phone"]');
-  if (phone && phone.value.trim() && !isValidPhone(phone.value)) {
-    setFieldError(phone, I18N.errors.phone[lang]);
-    if (!firstError) firstError = phone;
-  }
-  const email = section.querySelector('input[name="email"]');
-  if (email && email.value.trim() && !isValidEmail(email.value)) {
-    setFieldError(email, I18N.errors.email[lang]);
-    if (!firstError) firstError = email;
-  }
+  firstError = firstError || checkFormat(section.querySelector('input[name="phone"]'), isValidPhone, "phone", lang);
+  firstError = firstError || checkFormat(section.querySelector('input[name="email"]'), isValidEmail, "email", lang);
 
   if (firstError) {
     firstError.focus({ preventScroll: false });
@@ -247,16 +252,8 @@ function validateAll() {
     }
   });
 
-  const phone = form.elements["phone"];
-  if (phone && phone.value.trim() && !isValidPhone(phone.value)) {
-    setFieldError(phone, I18N.errors.phone[lang]);
-    if (!firstError) firstError = phone;
-  }
-  const email = form.elements["email"];
-  if (email && email.value.trim() && !isValidEmail(email.value)) {
-    setFieldError(email, I18N.errors.email[lang]);
-    if (!firstError) firstError = email;
-  }
+  firstError = firstError || checkFormat(form.elements["phone"], isValidPhone, "phone", lang);
+  firstError = firstError || checkFormat(form.elements["email"], isValidEmail, "email", lang);
 
   // consent + signature
   const consent = form.elements["consent"];
@@ -596,8 +593,9 @@ document.addEventListener("DOMContentLoaded", () => {
     b.addEventListener("click", () => applyLang(b.dataset.lang));
   });
 
-  // mode
+  // mode + staff defaults (date defaults run again post-restoreDraft, below)
   applyMode();
+  applyStaffDateDefaults();
 
   // wizard
   wizard.init();
@@ -621,14 +619,10 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("input", scheduleSave);
   form.addEventListener("change", scheduleSave);
 
-  // restore draft
+  // restore draft, then top up staff-mode date defaults (the draft may have
+  // restored empty values that overrode the initial pre-fill)
   restoreDraft();
-
-  // staff default dates after restore (don't overwrite if user already had values)
-  if (getMode() === "staff") {
-    // already handled in applyMode but call again in case input was empty after restore
-    applyMode();
-  }
+  applyStaffDateDefaults();
 
   // staff-mode footer: show "Open submissions Sheet" link if configured
   const sheetLink = document.getElementById("openSheet");
