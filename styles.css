@@ -14,6 +14,8 @@
   --csc-red: #B91C1C;
   --csc-red-dark: #991B1B;
   --csc-red-soft: #FEF2F2;
+  --csc-red-border: #F5D5D5;
+  --csc-red-border-soft: #ECCFCF;
   --focus: #2563EB;
   --success: #15803D;
   --error: #DC2626;
@@ -219,10 +221,8 @@ body[data-mode="client"] .form-section--staff-only { display: none !important; }
   padding: 14px 0 18px;
   margin-bottom: 18px;
 }
-.section-head--inline {
-  margin-bottom: 12px;
-}
-.section-head--inline h2,
+.section-head--inline { margin-bottom: 12px; }
+/* Higher specificity needed to beat body[data-mode="staff"] .section-head h2 below. */
 body[data-mode="staff"] .section-head--inline h2 {
   font-size: 12px;
   font-weight: 700;
@@ -238,13 +238,13 @@ body[data-mode="staff"] .section-head--inline h2 {
    Stronger visual weight: red top accent + warm tint + thicker padding. */
 .section-card--commit {
   background: var(--csc-red-soft);
+  border: 1px solid var(--csc-red-border);
   border-top: 3px solid var(--csc-red);
-  border-color: #F5D5D5;
   padding-top: 36px;
 }
 .section-card--commit .legal {
   background: var(--surface);
-  border-color: #ECCFCF;
+  border-color: var(--csc-red-border-soft);
 }
 
 .section-head {
@@ -261,8 +261,6 @@ body[data-mode="staff"] .section-head--inline h2 {
   /* asymmetric red rule extends past content edge */
   position: relative;
 }
-/* Default rule: short stub, no edge extension. Used for secondary sections
-   (Demographics, Education, Services, Support, Emergency Contact, etc.) */
 .section-head h2::after {
   content: "";
   position: absolute;
@@ -272,9 +270,7 @@ body[data-mode="staff"] .section-head--inline h2 {
   height: 2px;
   background: var(--csc-red);
 }
-/* Primary sections — full asymmetric rule extending past the left edge.
-   The :after width override beats the default. */
-.form-section--primary > .section-card > .section-head h2::after,
+/* Primary sections override the default short stub with a full edge-extended rule. */
 .section-card--primary .section-head h2::after,
 .section-card--commit .section-head h2::after {
   left: -32px;
@@ -282,7 +278,6 @@ body[data-mode="staff"] .section-head--inline h2 {
   right: 30%;
 }
 @media (max-width: 540px) {
-  .form-section--primary > .section-card > .section-head h2::after,
   .section-card--primary .section-head h2::after,
   .section-card--commit .section-head h2::after { left: -18px; }
 }
@@ -526,7 +521,7 @@ body[data-mode="staff"] .section-head--inline h2 {
   border-left: 3px solid var(--csc-red);
   padding: 18px 20px;
   margin: 0 -4px 24px;
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
 }
 .job-entry--primary .job-entry__title {
   font-size: 18px;
