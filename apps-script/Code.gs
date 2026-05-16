@@ -108,6 +108,13 @@ function doPost(e) {
     const signature = body.signature || "";
     const meta = body.meta || {};
 
+    // Server-side defense-in-depth: reject obvious garbage / empty submissions.
+    // Client-side validation enforces these for legitimate users; this catches
+    // direct POSTs that bypass the form.
+    if (!hasMinimumFields_(data)) {
+      return jsonResponse_({ ok: false, error: "missing_required" }, 400);
+    }
+
     // Generate reference number
     const ref = nextRefNumber_();
 
@@ -129,9 +136,19 @@ function doPost(e) {
 
     return jsonResponse_({ ok: true, ref });
   } catch (err) {
-    console.error("doPost error:", err);
-    return jsonResponse_({ ok: false, error: String(err && err.message || err) }, 500);
+    // Log full error details to Apps Script logs for debugging,
+    // but return a generic message to avoid leaking internals.
+    console.error("doPost error:", err && err.stack || err);
+    return jsonResponse_({ ok: false, error: "server" }, 500);
   }
+}
+
+function hasMinimumFields_(data) {
+  // Match the client's REQUIRED_FIELDS minimum: name + phone.
+  // (DOB and signature_date can vary in format; not safe to enforce server-side
+  //  without rejecting legitimate clients who declined to provide DOB.)
+  const trim = (v) => (v == null ? "" : String(v).trim());
+  return !!trim(data.last_name) && !!trim(data.first_name) && !!trim(data.phone);
 }
 
 // Optional GET for quick health-check from a browser.

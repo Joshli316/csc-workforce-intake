@@ -553,16 +553,20 @@ function onSubmitSuccess(result) {
   const refEl = document.getElementById("refBadge");
   if (refEl) refEl.textContent = result.ref || "—";
 
-  // QR code linking back to the form (so staff can hand the phone to next client)
+  // QR code linking back to the form (so staff can hand the phone to next client).
+  // If the QR service is blocked/offline, the URL text below stays visible so
+  // staff can still hand over the link verbally or via copy/paste.
   const qrBlock = document.getElementById("successQr");
   const qrImg = document.getElementById("qrImg");
-  if (qrBlock && qrImg) {
-    try {
-      const baseUrl = `${location.origin}${location.pathname}`;
-      const encoded = encodeURIComponent(baseUrl);
-      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=${encoded}`;
-      qrBlock.hidden = false;
-    } catch (_) { /* QR is decorative — ignore failures */ }
+  const qrUrlLink = document.getElementById("qrUrl");
+  if (qrBlock && qrImg && qrUrlLink) {
+    const baseUrl = `${location.origin}${location.pathname}`;
+    qrUrlLink.href = baseUrl;
+    // Render the URL without the scheme so it scans visually like a hand-off card.
+    qrUrlLink.textContent = baseUrl.replace(/^https?:\/\//, "");
+    qrImg.onerror = () => { qrImg.style.display = "none"; };
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=${encodeURIComponent(baseUrl)}`;
+    qrBlock.hidden = false;
   }
 
   // if preview, show a notice at top of success screen

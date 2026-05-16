@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# This is a public intake form for the Chinatown Service Center's
+# Workforce Development department. Indexing the page itself is fine —
+# all submitted data goes server-side to a private Google Sheet.
