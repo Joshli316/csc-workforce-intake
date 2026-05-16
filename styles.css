@@ -261,17 +261,30 @@ body[data-mode="staff"] .section-head--inline h2 {
   /* asymmetric red rule extends past content edge */
   position: relative;
 }
+/* Default rule: short stub, no edge extension. Used for secondary sections
+   (Demographics, Education, Services, Support, Emergency Contact, etc.) */
 .section-head h2::after {
   content: "";
   position: absolute;
-  left: -32px;
-  right: 30%;
+  left: 0;
+  width: 64px;
   bottom: 0;
   height: 2px;
   background: var(--csc-red);
 }
+/* Primary sections — full asymmetric rule extending past the left edge.
+   The :after width override beats the default. */
+.form-section--primary > .section-card > .section-head h2::after,
+.section-card--primary .section-head h2::after,
+.section-card--commit .section-head h2::after {
+  left: -32px;
+  width: auto;
+  right: 30%;
+}
 @media (max-width: 540px) {
-  .section-head h2::after { left: -18px; }
+  .form-section--primary > .section-card > .section-head h2::after,
+  .section-card--primary .section-head h2::after,
+  .section-card--commit .section-head h2::after { left: -18px; }
 }
 .section-head__sub {
   font-size: 15px;
