@@ -72,11 +72,10 @@
   <form id="intakeForm" novalidate>
 
   <!-- INTAKE META (staff-only fields) -->
-  <section class="form-section form-section--staff-only" data-step="meta" data-section-name="meta">
-    <div class="section-card">
-      <header class="section-head">
-        <h2><span data-en="Intake Information" data-zh="入職資料">Intake Information</span></h2>
-        <p class="section-head__sub" data-en="Staff to fill in" data-zh="工作人員填寫">Staff to fill in</p>
+  <section class="form-section form-section--staff-only form-section--meta" data-step="meta" data-section-name="meta">
+    <div class="section-card section-card--strip">
+      <header class="section-head section-head--inline">
+        <h2><span data-en="Intake" data-zh="入職資料">Intake</span></h2>
       </header>
       <div class="field-grid">
         <label class="field">
@@ -534,8 +533,8 @@
   </section>
 
   <!-- STEP 6 — Certification & Signature -->
-  <section class="form-section" data-step="6" data-section-name="certification">
-    <div class="section-card">
+  <section class="form-section form-section--commit" data-step="6" data-section-name="certification">
+    <div class="section-card section-card--commit">
       <header class="section-head">
         <h2><span data-en="Certification & Signature" data-zh="證明與簽名">Certification & Signature</span></h2>
       </header>

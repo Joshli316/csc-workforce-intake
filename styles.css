@@ -210,6 +210,43 @@ body[data-mode="client"] .form-section--staff-only { display: none !important; }
   .section-card { padding: 22px 18px; border-radius: 12px; }
 }
 
+/* Strip variant — the staff-mode intake meta row. No card chrome, slimmer. */
+.section-card--strip {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 14px 0 18px;
+  margin-bottom: 18px;
+}
+.section-head--inline {
+  margin-bottom: 12px;
+}
+.section-head--inline h2,
+body[data-mode="staff"] .section-head--inline h2 {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding-bottom: 0;
+  margin: 0;
+}
+.section-head--inline h2::after { display: none; }
+
+/* Commit variant — the certification + signature section, the legal anchor.
+   Stronger visual weight: red top accent + warm tint + thicker padding. */
+.section-card--commit {
+  background: var(--csc-red-soft);
+  border-top: 3px solid var(--csc-red);
+  border-color: #F5D5D5;
+  padding-top: 36px;
+}
+.section-card--commit .legal {
+  background: var(--surface);
+  border-color: #ECCFCF;
+}
+
 .section-head {
   margin-bottom: 28px;
   position: relative;
