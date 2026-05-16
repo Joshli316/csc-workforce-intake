@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#B91C1C">
+<meta name="description" content="Chinatown Service Center — Workforce Development Intake Form. 華埠服務中心就業發展部入職表格。">
+<title>Workforce Intake · 就業發展部入職表格 · CSC</title>
+<meta property="og:title" content="CSC Workforce Development Intake / 華埠服務中心就業發展部入職表格">
+<meta property="og:description" content="Bilingual intake form for Chinatown Service Center Workforce Development services in Los Angeles.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_Hant_TW">
+<meta property="og:locale:alternate" content="en_US">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23B91C1C'/%3E%3Ctext x='16' y='22' font-family='system-ui,sans-serif' font-size='18' font-weight='700' fill='%23FAF8F4' text-anchor='middle'%3ECSC%3C/text%3E%3C/svg%3E">
+</head>
+<body data-mode="client">
+
+<a class="skip-link" href="#main" data-en="Skip to form" data-zh="跳至表格">Skip to form</a>
+
+<div class="progress-bar" id="progressBar" aria-hidden="true"><div class="progress-bar__fill" id="progressFill"></div></div>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <div class="brand">
+      <div class="brand__mark" aria-hidden="true">CSC</div>
+      <div class="brand__text">
+        <div class="brand__org" data-en="Chinatown Service Center" data-zh="華埠服務中心">Chinatown Service Center</div>
+        <div class="brand__dept" data-en="Workforce Development · Intake Form" data-zh="就業發展部 · 入職表格">Workforce Development · Intake Form</div>
+      </div>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button type="button" class="lang-toggle__btn" data-lang="zh" aria-pressed="true">中文</button>
+      <button type="button" class="lang-toggle__btn" data-lang="en" aria-pressed="false">English</button>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="main">
+
+  <!-- WELCOME / STEP 0 (client wizard only) -->
+  <section class="form-section is-active" data-step="0">
+    <div class="section-card section-card--welcome">
+      <h1 class="section-card__title">
+        <span data-en="Welcome" data-zh="歡迎">Welcome</span>
+      </h1>
+      <p class="section-card__lede">
+        <span data-en="This form helps us get to know you so we can match you with the right job, training, or service. It takes about 8–10 minutes." data-zh="此表格幫助我們了解您，以便為您提供合適的工作、培訓或服務。填寫約需 8–10 分鐘。">This form helps us get to know you so we can match you with the right job, training, or service. It takes about 8–10 minutes.</span>
+      </p>
+      <ul class="welcome-list">
+        <li>
+          <span class="welcome-list__num">1</span>
+          <span data-en="You can leave any question blank except Name, Date of Birth, Phone, and Signature." data-zh="除了姓名、出生日期、電話和簽名外，其他問題均可選擇不填。">You can leave any question blank except Name, Date of Birth, Phone, and Signature.</span>
+        </li>
+        <li>
+          <span class="welcome-list__num">2</span>
+          <span data-en="Your information is stored privately. Only Workforce staff can see it." data-zh="您的資料受保密保護，只有就業發展部工作人員可以查看。">Your information is stored privately. Only Workforce staff can see it.</span>
+        </li>
+        <li>
+          <span class="welcome-list__num">3</span>
+          <span data-en="If you need help, ask a staff member — they can fill it out for you." data-zh="如需協助，請告訴工作人員，他們可以幫您填寫。">If you need help, ask a staff member — they can fill it out for you.</span>
+        </li>
+      </ul>
+      <div class="wizard-nav wizard-nav--end">
+        <button type="button" class="btn btn--primary" data-action="next">
+          <span data-en="Start →" data-zh="開始 →">Start →</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <form id="intakeForm" novalidate>
+
+  <!-- INTAKE META (staff-only fields) -->
+  <section class="form-section form-section--staff-only" data-step="meta" data-section-name="meta">
+    <div class="section-card">
+      <header class="section-head">
+        <h2><span data-en="Intake Information" data-zh="入職資料">Intake Information</span></h2>
+        <p class="section-head__sub" data-en="Staff to fill in" data-zh="工作人員填寫">Staff to fill in</p>
+      </header>
+      <div class="field-grid">
+        <label class="field">
+          <span class="field-label" data-en="Intake Date" data-zh="登記日期">Intake Date</span>
+          <input type="date" name="intake_date" id="intake_date">
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Staff Name" data-zh="工作人員姓名">Staff Name</span>
+          <input type="text" name="staff_name" id="staff_name" autocomplete="name">
+        </label>
+        <label class="field field--full">
+          <span class="field-label" data-en="Referral Source" data-zh="轉介來源">Referral Source</span>
+          <select name="referral_source">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="walk_in" data-en="Walk-in" data-zh="自行前來">Walk-in</option>
+            <option value="friend_family" data-en="Friend / Family" data-zh="朋友／家人">Friend / Family</option>
+            <option value="csc_other_dept" data-en="CSC — other department" data-zh="華埠服務中心 — 其他部門">CSC — other department</option>
+            <option value="community_partner" data-en="Community partner" data-zh="社區合作夥伴">Community partner</option>
+            <option value="online" data-en="Website / Online" data-zh="網站／線上">Website / Online</option>
+            <option value="event" data-en="Community event / Outreach" data-zh="社區活動／推廣">Community event / Outreach</option>
+            <option value="other" data-en="Other" data-zh="其他">Other</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 1 — Identification -->
+  <section class="form-section" data-step="1" data-section-name="identification">
+    <div class="section-card">
+      <header class="section-head">
+        <h2><span data-en="Personal Information" data-zh="個人資料">Personal Information</span></h2>
+        <p class="section-head__sub" data-en="Required fields marked with *" data-zh="標有 * 的欄位為必填">Required fields marked with *</p>
+      </header>
+
+      <div class="field-grid">
+        <label class="field">
+          <span class="field-label">
+            <span data-en="Last Name" data-zh="姓氏">Last Name</span>
+            <span class="required" aria-label="required">*</span>
+          </span>
+          <input type="text" name="last_name" autocomplete="family-name" required>
+        </label>
+        <label class="field">
+          <span class="field-label">
+            <span data-en="First Name" data-zh="名字">First Name</span>
+            <span class="required" aria-label="required">*</span>
+          </span>
+          <input type="text" name="first_name" autocomplete="given-name" required>
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Middle Name" data-zh="中間名">Middle Name</span>
+          <input type="text" name="middle_name" autocomplete="additional-name">
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Preferred Name" data-zh="慣用名字">Preferred Name</span>
+          <input type="text" name="preferred_name" autocomplete="nickname">
+        </label>
+
+        <label class="field">
+          <span class="field-label">
+            <span data-en="Date of Birth" data-zh="出生日期">Date of Birth</span>
+            <span class="required" aria-label="required">*</span>
+          </span>
+          <input type="date" name="dob" autocomplete="bday" required>
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Gender" data-zh="性別">Gender</span>
+          <select name="gender">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="female" data-en="Female" data-zh="女">Female</option>
+            <option value="male" data-en="Male" data-zh="男">Male</option>
+            <option value="nonbinary" data-en="Non-binary" data-zh="非二元性別">Non-binary</option>
+            <option value="self_describe" data-en="Prefer to self-describe" data-zh="自行描述">Prefer to self-describe</option>
+            <option value="prefer_not" data-en="Prefer not to say" data-zh="不願透露">Prefer not to say</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label">
+            <span data-en="Phone" data-zh="電話">Phone</span>
+            <span class="required" aria-label="required">*</span>
+          </span>
+          <input type="tel" name="phone" autocomplete="tel" inputmode="tel" placeholder="(213) 555-0100" required>
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Email" data-zh="電子郵件">Email</span>
+          <input type="email" name="email" autocomplete="email" inputmode="email">
+        </label>
+
+        <label class="field field--full">
+          <span class="field-label" data-en="Best Way / Time to Contact You" data-zh="最佳聯絡方式／時間">Best Way / Time to Contact You</span>
+          <input type="text" name="best_contact" data-en-placeholder="e.g. text after 5pm" data-zh-placeholder="例如：下午 5 點後傳簡訊" placeholder="e.g. text after 5pm">
+        </label>
+
+        <label class="field field--full">
+          <span class="field-label" data-en="Street Address" data-zh="街道地址">Street Address</span>
+          <input type="text" name="address" autocomplete="address-line1">
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Apt / Unit" data-zh="公寓號">Apt / Unit</span>
+          <input type="text" name="address_apt" autocomplete="address-line2">
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="City" data-zh="城市">City</span>
+          <input type="text" name="city" autocomplete="address-level2" value="Los Angeles">
+        </label>
+        <label class="field field--small">
+          <span class="field-label" data-en="State" data-zh="州">State</span>
+          <input type="text" name="state" autocomplete="address-level1" value="CA" maxlength="2">
+        </label>
+        <label class="field field--small">
+          <span class="field-label" data-en="ZIP" data-zh="郵編">ZIP</span>
+          <input type="text" name="zip" autocomplete="postal-code" inputmode="numeric" maxlength="10">
+        </label>
+
+        <label class="field field--full">
+          <span class="field-label">
+            <span data-en="Social Security Number (optional)" data-zh="社會安全號碼（選填）">Social Security Number (optional)</span>
+          </span>
+          <input type="text" name="ssn" inputmode="numeric" autocomplete="off" data-en-placeholder="###-##-####" data-zh-placeholder="###-##-####" placeholder="###-##-####">
+          <span class="field-hint" data-en="You may leave this blank. Required only for certain funded programs." data-zh="可不填。僅部分政府資助項目需要。">You may leave this blank. Required only for certain funded programs.</span>
+        </label>
+      </div>
+    </div>
+    <div class="wizard-nav wizard-nav--client">
+      <button type="button" class="btn btn--ghost" data-action="back" data-en="← Back" data-zh="← 上一步">← Back</button>
+      <button type="button" class="btn btn--primary" data-action="next" data-en="Next →" data-zh="下一步 →">Next →</button>
+    </div>
+  </section>
+
+  <!-- STEP 2 — Demographics -->
+  <section class="form-section" data-step="2" data-section-name="demographics">
+    <div class="section-card">
+      <header class="section-head">
+        <h2><span data-en="Demographics" data-zh="人口統計資料">Demographics</span></h2>
+        <p class="section-head__sub" data-en="Optional — used for funder reporting in aggregate only." data-zh="選填 — 僅用於資助方的彙總報告。">Optional — used for funder reporting in aggregate only.</p>
+      </header>
+
+      <fieldset class="field-group">
+        <legend class="field-label" data-en="Race / Ethnicity (check all that apply)" data-zh="種族（可複選）">Race / Ethnicity (check all that apply)</legend>
+        <div class="checks">
+          <label class="check"><input type="checkbox" name="race" value="asian"><span data-en="Asian" data-zh="亞裔">Asian</span></label>
+          <label class="check"><input type="checkbox" name="race" value="black"><span data-en="Black / African American" data-zh="非裔">Black / African American</span></label>
+          <label class="check"><input type="checkbox" name="race" value="hispanic"><span data-en="Hispanic / Latino" data-zh="拉丁裔">Hispanic / Latino</span></label>
+          <label class="check"><input type="checkbox" name="race" value="native"><span data-en="Native American / Alaska Native" data-zh="美洲原住民">Native American / Alaska Native</span></label>
+          <label class="check"><input type="checkbox" name="race" value="pacific"><span data-en="Native Hawaiian / Pacific Islander" data-zh="夏威夷／太平洋島民">Native Hawaiian / Pacific Islander</span></label>
+          <label class="check"><input type="checkbox" name="race" value="white"><span data-en="White" data-zh="白人">White</span></label>
+          <label class="check"><input type="checkbox" name="race" value="other"><span data-en="Other" data-zh="其他">Other</span></label>
+          <label class="check"><input type="checkbox" name="race" value="prefer_not"><span data-en="Prefer not to say" data-zh="不願透露">Prefer not to say</span></label>
+        </div>
+      </fieldset>
+
+      <div class="field-grid">
+        <label class="field">
+          <span class="field-label" data-en="Primary Language" data-zh="主要語言">Primary Language</span>
+          <select name="primary_language">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="english" data-en="English" data-zh="英語">English</option>
+            <option value="cantonese" data-en="Cantonese" data-zh="廣東話">Cantonese</option>
+            <option value="mandarin" data-en="Mandarin" data-zh="普通話／國語">Mandarin</option>
+            <option value="spanish" data-en="Spanish" data-zh="西班牙語">Spanish</option>
+            <option value="vietnamese" data-en="Vietnamese" data-zh="越南語">Vietnamese</option>
+            <option value="korean" data-en="Korean" data-zh="韓語">Korean</option>
+            <option value="other" data-en="Other" data-zh="其他">Other</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="English Ability" data-zh="英語程度">English Ability</span>
+          <select name="english_level">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="none" data-en="Does not speak English" data-zh="不會英語">Does not speak English</option>
+            <option value="basic" data-en="Basic" data-zh="基礎">Basic</option>
+            <option value="intermediate" data-en="Intermediate" data-zh="中等">Intermediate</option>
+            <option value="advanced" data-en="Advanced" data-zh="流利">Advanced</option>
+            <option value="native" data-en="Native / Fluent" data-zh="母語／流利">Native / Fluent</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label" data-en="Citizenship Status" data-zh="公民身份">Citizenship Status</span>
+          <select name="citizenship">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="us_citizen" data-en="US Citizen" data-zh="美國公民">US Citizen</option>
+            <option value="permanent_resident" data-en="Permanent Resident" data-zh="永久居民">Permanent Resident</option>
+            <option value="refugee_asylee" data-en="Refugee / Asylee" data-zh="難民／庇護">Refugee / Asylee</option>
+            <option value="work_auth" data-en="Other work-authorized" data-zh="其他工作許可">Other work-authorized</option>
+            <option value="not_authorized" data-en="Not work-authorized" data-zh="無工作許可">Not work-authorized</option>
+            <option value="prefer_not" data-en="Prefer not to say" data-zh="不願透露">Prefer not to say</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Marital Status" data-zh="婚姻狀況">Marital Status</span>
+          <select name="marital">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="single" data-en="Single" data-zh="單身">Single</option>
+            <option value="married" data-en="Married" data-zh="已婚">Married</option>
+            <option value="divorced" data-en="Divorced / Separated" data-zh="離婚／分居">Divorced / Separated</option>
+            <option value="widowed" data-en="Widowed" data-zh="喪偶">Widowed</option>
+            <option value="prefer_not" data-en="Prefer not to say" data-zh="不願透露">Prefer not to say</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label" data-en="Household Size" data-zh="家庭人數">Household Size</span>
+          <input type="number" name="household_size" min="1" max="20" inputmode="numeric">
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Veteran" data-zh="退伍軍人">Veteran</span>
+          <select name="veteran">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="yes" data-en="Yes" data-zh="是">Yes</option>
+            <option value="no" data-en="No" data-zh="否">No</option>
+            <option value="prefer_not" data-en="Prefer not to say" data-zh="不願透露">Prefer not to say</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field-label" data-en="Disability" data-zh="殘障">Disability</span>
+          <select name="disability">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="yes" data-en="Yes" data-zh="是">Yes</option>
+            <option value="no" data-en="No" data-zh="否">No</option>
+            <option value="prefer_not" data-en="Prefer not to say" data-zh="不願透露">Prefer not to say</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Single Parent / Head of Household" data-zh="單親／戶主">Single Parent / Head of Household</span>
+          <select name="single_parent">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="yes" data-en="Yes" data-zh="是">Yes</option>
+            <option value="no" data-en="No" data-zh="否">No</option>
+            <option value="prefer_not" data-en="Prefer not to say" data-zh="不願透露">Prefer not to say</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div class="wizard-nav wizard-nav--client">
+      <button type="button" class="btn btn--ghost" data-action="back" data-en="← Back" data-zh="← 上一步">← Back</button>
+      <button type="button" class="btn btn--primary" data-action="next" data-en="Next →" data-zh="下一步 →">Next →</button>
+    </div>
+  </section>
+
+  <!-- STEP 3 — Education & Employment Status -->
+  <section class="form-section" data-step="3" data-section-name="education_employment">
+    <div class="section-card">
+      <header class="section-head">
+        <h2><span data-en="Education" data-zh="教育">Education</span></h2>
+      </header>
+      <div class="field-grid">
+        <label class="field field--full">
+          <span class="field-label" data-en="Highest Level Completed" data-zh="最高學歷">Highest Level Completed</span>
+          <select name="education_level">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="none" data-en="No formal schooling" data-zh="無正規學歷">No formal schooling</option>
+            <option value="less_hs" data-en="Less than high school" data-zh="未完成高中">Less than high school</option>
+            <option value="hs_diploma" data-en="High school diploma / GED" data-zh="高中畢業／同等學歷">High school diploma / GED</option>
+            <option value="some_college" data-en="Some college, no degree" data-zh="部分大學課程，無學位">Some college, no degree</option>
+            <option value="associate" data-en="Associate degree" data-zh="副學士">Associate degree</option>
+            <option value="bachelor" data-en="Bachelor's degree" data-zh="學士">Bachelor's degree</option>
+            <option value="master" data-en="Master's degree" data-zh="碩士">Master's degree</option>
+            <option value="doctorate" data-en="Doctorate / Professional" data-zh="博士／專業學位">Doctorate / Professional</option>
+            <option value="vocational" data-en="Vocational / Technical certificate" data-zh="職業／技術證書">Vocational / Technical certificate</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Currently in School?" data-zh="目前在學？">Currently in School?</span>
+          <select name="in_school">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="no" data-en="No" data-zh="否">No</option>
+            <option value="yes_ft" data-en="Yes — full time" data-zh="是 — 全日制">Yes — full time</option>
+            <option value="yes_pt" data-en="Yes — part time" data-zh="是 — 兼讀">Yes — part time</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Last School / Year" data-zh="最近就讀學校／年份">Last School / Year</span>
+          <input type="text" name="last_school" data-en-placeholder="School name, year" data-zh-placeholder="學校名稱，年份" placeholder="School name, year">
+        </label>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <header class="section-head">
+        <h2><span data-en="Employment Status" data-zh="就業狀況">Employment Status</span></h2>
+      </header>
+      <fieldset class="field-group">
+        <legend class="field-label" data-en="Current Employment Status" data-zh="目前就業狀況">Current Employment Status</legend>
+        <div class="radios">
+          <label class="radio"><input type="radio" name="emp_status" value="unemployed"><span data-en="Unemployed, looking for work" data-zh="失業，正在找工作">Unemployed, looking for work</span></label>
+          <label class="radio"><input type="radio" name="emp_status" value="unemployed_not_looking"><span data-en="Unemployed, not looking" data-zh="失業，未找工作">Unemployed, not looking</span></label>
+          <label class="radio"><input type="radio" name="emp_status" value="employed_pt"><span data-en="Employed part-time" data-zh="兼職">Employed part-time</span></label>
+          <label class="radio"><input type="radio" name="emp_status" value="employed_ft"><span data-en="Employed full-time" data-zh="全職">Employed full-time</span></label>
+          <label class="radio"><input type="radio" name="emp_status" value="self_employed"><span data-en="Self-employed" data-zh="自僱">Self-employed</span></label>
+          <label class="radio"><input type="radio" name="emp_status" value="student"><span data-en="Student" data-zh="學生">Student</span></label>
+          <label class="radio"><input type="radio" name="emp_status" value="retired"><span data-en="Retired" data-zh="退休">Retired</span></label>
+        </div>
+      </fieldset>
+      <div class="field-grid">
+        <label class="field">
+          <span class="field-label" data-en="How long unemployed?" data-zh="失業多久？">How long unemployed?</span>
+          <select name="unemployed_duration">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="not_applicable" data-en="Not applicable" data-zh="不適用">Not applicable</option>
+            <option value="under_1m" data-en="Less than 1 month" data-zh="少於 1 個月">Less than 1 month</option>
+            <option value="1_3m" data-en="1–3 months" data-zh="1–3 個月">1–3 months</option>
+            <option value="3_6m" data-en="3–6 months" data-zh="3–6 個月">3–6 months</option>
+            <option value="6_12m" data-en="6–12 months" data-zh="6–12 個月">6–12 months</option>
+            <option value="over_1y" data-en="More than 1 year" data-zh="超過 1 年">More than 1 year</option>
+            <option value="never" data-en="Never employed" data-zh="從未就業">Never employed</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Currently Receive Unemployment Insurance (UI)?" data-zh="目前領取失業保險（UI）？">Currently Receive Unemployment Insurance (UI)?</span>
+          <select name="receives_ui">
+            <option value="" data-en="— Select —" data-zh="— 請選擇 —">— Select —</option>
+            <option value="yes" data-en="Yes" data-zh="是">Yes</option>
+            <option value="no" data-en="No" data-zh="否">No</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="wizard-nav wizard-nav--client">
+      <button type="button" class="btn btn--ghost" data-action="back" data-en="← Back" data-zh="← 上一步">← Back</button>
+      <button type="button" class="btn btn--primary" data-action="next" data-en="Next →" data-zh="下一步 →">Next →</button>
+    </div>
+  </section>
+
+  <!-- STEP 4 — Services + Additional Support -->
+  <section class="form-section" data-step="4" data-section-name="services">
+    <div class="section-card">
+      <header class="section-head">
+        <h2><span data-en="Services You Are Interested In" data-zh="您感興趣的服務">Services You Are Interested In</span></h2>
+        <p class="section-head__sub" data-en="Check all that apply." data-zh="請勾選所有適用項目。">Check all that apply.</p>
+      </header>
+      <fieldset class="field-group">
+        <legend class="sr-only" data-en="Services" data-zh="服務">Services</legend>
+        <div class="checks">
+          <label class="check"><input type="checkbox" name="services" value="job_placement"><span data-en="Job placement assistance" data-zh="就業安置協助">Job placement assistance</span></label>
+          <label class="check"><input type="checkbox" name="services" value="resume"><span data-en="Resume writing help" data-zh="履歷協助">Resume writing help</span></label>
+          <label class="check"><input type="checkbox" name="services" value="interview"><span data-en="Interview preparation" data-zh="面試準備">Interview preparation</span></label>
+          <label class="check"><input type="checkbox" name="services" value="career_counsel"><span data-en="Career counseling" data-zh="職業輔導">Career counseling</span></label>
+          <label class="check"><input type="checkbox" name="services" value="vocational"><span data-en="Vocational / occupational training" data-zh="職業培訓">Vocational / occupational training</span></label>
+          <label class="check"><input type="checkbox" name="services" value="esl"><span data-en="ESL / English classes" data-zh="英語課程">ESL / English classes</span></label>
+          <label class="check"><input type="checkbox" name="services" value="computer"><span data-en="Computer / digital skills" data-zh="電腦／數位技能">Computer / digital skills</span></label>
+          <label class="check"><input type="checkbox" name="services" value="ged"><span data-en="GED / High school equivalency" data-zh="GED／高中同等學歷">GED / High school equivalency</span></label>
+          <label class="check"><input type="checkbox" name="services" value="financial_literacy"><span data-en="Financial literacy" data-zh="財務知識">Financial literacy</span></label>
+        </div>
+      </fieldset>
+
+      <label class="field field--full">
+        <span class="field-label" data-en="Other services (please describe)" data-zh="其他服務（請說明）">Other services (please describe)</span>
+        <textarea name="services_other" rows="2"></textarea>
+      </label>
+    </div>
+
+    <div class="section-card">
+      <header class="section-head">
+        <h2><span data-en="Additional Support Needs" data-zh="其他支援需求">Additional Support Needs</span></h2>
+        <p class="section-head__sub" data-en="We can refer you to partners for these." data-zh="我們可以為您轉介合作機構。">We can refer you to partners for these.</p>
+      </header>
+      <fieldset class="field-group">
+        <legend class="sr-only" data-en="Support needs" data-zh="支援需求">Support needs</legend>
+        <div class="checks">
+          <label class="check"><input type="checkbox" name="support" value="public_assistance"><span data-en="Public assistance (CalFresh, MediCal, etc.)" data-zh="公共援助（CalFresh、MediCal 等）">Public assistance (CalFresh, MediCal, etc.)</span></label>
+          <label class="check"><input type="checkbox" name="support" value="housing"><span data-en="Housing assistance" data-zh="住房援助">Housing assistance</span></label>
+          <label class="check"><input type="checkbox" name="support" value="childcare"><span data-en="Childcare" data-zh="兒童托管">Childcare</span></label>
+          <label class="check"><input type="checkbox" name="support" value="transportation"><span data-en="Transportation" data-zh="交通">Transportation</span></label>
+          <label class="check"><input type="checkbox" name="support" value="mental_health"><span data-en="Mental health" data-zh="心理健康">Mental health</span></label>
+          <label class="check"><input type="checkbox" name="support" value="healthcare"><span data-en="Healthcare access" data-zh="醫療">Healthcare access</span></label>
+          <label class="check"><input type="checkbox" name="support" value="legal"><span data-en="Legal services" data-zh="法律服務">Legal services</span></label>
+          <label class="check"><input type="checkbox" name="support" value="senior"><span data-en="Senior services" data-zh="長者服務">Senior services</span></label>
+        </div>
+      </fieldset>
+
+      <label class="field field--full">
+        <span class="field-label" data-en="Anything else you'd like us to know?" data-zh="還有什麼您希望我們了解的？">Anything else you'd like us to know?</span>
+        <textarea name="notes" rows="3"></textarea>
+      </label>
+    </div>
+
+    <div class="wizard-nav wizard-nav--client">
+      <button type="button" class="btn btn--ghost" data-action="back" data-en="← Back" data-zh="← 上一步">← Back</button>
+      <button type="button" class="btn btn--primary" data-action="next" data-en="Next →" data-zh="下一步 →">Next →</button>
+    </div>
+  </section>
+
+  <!-- STEP 5 — Emergency Contact + Employment History -->
+  <section class="form-section" data-step="5" data-section-name="contacts_history">
+    <div class="section-card">
+      <header class="section-head">
+        <h2><span data-en="Emergency Contact" data-zh="緊急聯絡人">Emergency Contact</span></h2>
+        <p class="section-head__sub" data-en="In case we cannot reach you." data-zh="當我們無法聯絡到您時使用。">In case we cannot reach you.</p>
+      </header>
+      <div class="field-grid">
+        <label class="field">
+          <span class="field-label" data-en="Name" data-zh="姓名">Name</span>
+          <input type="text" name="emergency_name" autocomplete="off">
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Phone" data-zh="電話">Phone</span>
+          <input type="tel" name="emergency_phone" inputmode="tel">
+        </label>
+        <label class="field field--full">
+          <span class="field-label" data-en="Relationship" data-zh="關係">Relationship</span>
+          <input type="text" name="emergency_relationship" data-en-placeholder="e.g. spouse, sibling, friend" data-zh-placeholder="例如：配偶、兄弟姊妹、朋友" placeholder="e.g. spouse, sibling, friend">
+        </label>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <header class="section-head">
+        <h2><span data-en="Employment History" data-zh="就業歷史">Employment History</span></h2>
+        <p class="section-head__sub" data-en="Most recent first. Up to 3 — leave blank if none." data-zh="最近的優先填寫，最多 3 項。若無可空白。">Most recent first. Up to 3 — leave blank if none.</p>
+      </header>
+
+      <div class="job-entry">
+        <h3 class="job-entry__title" data-en="Most Recent Job" data-zh="最近的工作">Most Recent Job</h3>
+        <div class="field-grid">
+          <label class="field"><span class="field-label" data-en="Employer" data-zh="雇主">Employer</span><input type="text" name="job1_employer"></label>
+          <label class="field"><span class="field-label" data-en="Position / Title" data-zh="職位">Position / Title</span><input type="text" name="job1_title"></label>
+          <label class="field"><span class="field-label" data-en="Start Date" data-zh="開始日期">Start Date</span><input type="month" name="job1_start"></label>
+          <label class="field"><span class="field-label" data-en="End Date" data-zh="結束日期">End Date</span><input type="month" name="job1_end"></label>
+          <label class="field field--full"><span class="field-label" data-en="Reason for Leaving" data-zh="離職原因">Reason for Leaving</span><input type="text" name="job1_reason"></label>
+        </div>
+      </div>
+
+      <div class="job-entry">
+        <h3 class="job-entry__title" data-en="Previous Job" data-zh="上一份工作">Previous Job</h3>
+        <div class="field-grid">
+          <label class="field"><span class="field-label" data-en="Employer" data-zh="雇主">Employer</span><input type="text" name="job2_employer"></label>
+          <label class="field"><span class="field-label" data-en="Position / Title" data-zh="職位">Position / Title</span><input type="text" name="job2_title"></label>
+          <label class="field"><span class="field-label" data-en="Start Date" data-zh="開始日期">Start Date</span><input type="month" name="job2_start"></label>
+          <label class="field"><span class="field-label" data-en="End Date" data-zh="結束日期">End Date</span><input type="month" name="job2_end"></label>
+          <label class="field field--full"><span class="field-label" data-en="Reason for Leaving" data-zh="離職原因">Reason for Leaving</span><input type="text" name="job2_reason"></label>
+        </div>
+      </div>
+
+      <div class="job-entry">
+        <h3 class="job-entry__title" data-en="Earlier Job" data-zh="更早的工作">Earlier Job</h3>
+        <div class="field-grid">
+          <label class="field"><span class="field-label" data-en="Employer" data-zh="雇主">Employer</span><input type="text" name="job3_employer"></label>
+          <label class="field"><span class="field-label" data-en="Position / Title" data-zh="職位">Position / Title</span><input type="text" name="job3_title"></label>
+          <label class="field"><span class="field-label" data-en="Start Date" data-zh="開始日期">Start Date</span><input type="month" name="job3_start"></label>
+          <label class="field"><span class="field-label" data-en="End Date" data-zh="結束日期">End Date</span><input type="month" name="job3_end"></label>
+          <label class="field field--full"><span class="field-label" data-en="Reason for Leaving" data-zh="離職原因">Reason for Leaving</span><input type="text" name="job3_reason"></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="wizard-nav wizard-nav--client">
+      <button type="button" class="btn btn--ghost" data-action="back" data-en="← Back" data-zh="← 上一步">← Back</button>
+      <button type="button" class="btn btn--primary" data-action="next" data-en="Next →" data-zh="下一步 →">Next →</button>
+    </div>
+  </section>
+
+  <!-- STEP 6 — Certification & Signature -->
+  <section class="form-section" data-step="6" data-section-name="certification">
+    <div class="section-card">
+      <header class="section-head">
+        <h2><span data-en="Certification & Signature" data-zh="證明與簽名">Certification & Signature</span></h2>
+      </header>
+
+      <div class="legal">
+        <p data-en="I certify that the information provided on this form is true and complete to the best of my knowledge. I understand that providing false information may result in being denied services." data-zh="本人證明此表格所填寫的資料屬實且完整，據本人所知無誤。本人理解，提供虛假資料可能導致無法獲得服務。">I certify that the information provided on this form is true and complete to the best of my knowledge. I understand that providing false information may result in being denied services.</p>
+        <p data-en="I authorize the Chinatown Service Center to keep this information in my client file and to share it with funders or partner agencies only as required to provide me with services or to comply with grant reporting." data-zh="本人授權華埠服務中心將此資料保存於我的客戶檔案中，並僅為提供服務或符合資助報告要求時，與資助方或合作機構分享。">I authorize the Chinatown Service Center to keep this information in my client file and to share it with funders or partner agencies only as required to provide me with services or to comply with grant reporting.</p>
+        <p data-en="I understand that my participation in any program is voluntary, and that I may withdraw at any time without losing access to other CSC services." data-zh="本人理解，參與任何項目均屬自願，本人可隨時退出，且不影響獲得華埠服務中心其他服務的權利。">I understand that my participation in any program is voluntary, and that I may withdraw at any time without losing access to other CSC services.</p>
+      </div>
+
+      <div class="consent">
+        <label class="check">
+          <input type="checkbox" name="consent" id="consent" required>
+          <span data-en="I have read and understand the above." data-zh="本人已閱讀並理解以上內容。">I have read and understand the above.</span>
+        </label>
+      </div>
+
+      <div class="signature-block">
+        <div class="signature-block__label">
+          <span class="field-label">
+            <span data-en="Signature" data-zh="簽名">Signature</span>
+            <span class="required">*</span>
+          </span>
+          <span class="field-hint" data-en="Sign with your finger, mouse, or stylus." data-zh="請用手指、滑鼠或觸控筆簽名。">Sign with your finger, mouse, or stylus.</span>
+        </div>
+        <div class="signature-pad">
+          <canvas id="signaturePad" width="480" height="180" aria-label="Signature pad"></canvas>
+          <div class="signature-pad__baseline" aria-hidden="true"></div>
+          <button type="button" class="btn btn--ghost btn--small signature-pad__clear" id="clearSignature" data-en="Clear" data-zh="清除">Clear</button>
+        </div>
+      </div>
+
+      <div class="field-grid">
+        <label class="field">
+          <span class="field-label">
+            <span data-en="Date" data-zh="日期">Date</span>
+            <span class="required">*</span>
+          </span>
+          <input type="date" name="signature_date" id="signature_date" required>
+        </label>
+        <label class="field">
+          <span class="field-label" data-en="Printed Name (optional)" data-zh="正楷姓名（選填）">Printed Name (optional)</span>
+          <input type="text" name="printed_name">
+        </label>
+      </div>
+
+      <div id="errorSummary" class="error-summary" hidden aria-live="polite"></div>
+
+      <div class="wizard-nav wizard-nav--client wizard-nav--end">
+        <button type="button" class="btn btn--ghost" data-action="back" data-en="← Back" data-zh="← 上一步">← Back</button>
+        <button type="submit" class="btn btn--primary btn--submit" id="submitBtn">
+          <span class="btn__label" data-en="Submit Form" data-zh="提交表格">Submit Form</span>
+          <span class="btn__spinner" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  </form>
+
+  <!-- SUCCESS SCREEN -->
+  <section class="form-section success-screen" data-step="success" hidden>
+    <div class="section-card section-card--success">
+      <div class="success-check" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="64" height="64"><circle cx="32" cy="32" r="30" fill="none" stroke="#15803D" stroke-width="3"/><path d="M18 32 L28 42 L46 22" fill="none" stroke="#15803D" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h1 class="success-screen__title">
+        <span data-en="Thank you — your form was submitted." data-zh="感謝您 — 表格已成功提交。">Thank you — your form was submitted.</span>
+      </h1>
+      <div class="ref-badge" id="refBadge"></div>
+      <p class="success-screen__lede">
+        <span data-en="Please keep your reference number. You can show it next time you visit." data-zh="請保留您的參考編號，下次來訪時可出示。">Please keep your reference number. You can show it next time you visit.</span>
+      </p>
+
+      <h2 class="success-screen__h2" data-en="What happens next" data-zh="接下來會發生什麼">What happens next</h2>
+      <ol class="next-steps">
+        <li>
+          <span data-en="A Workforce specialist will review your information." data-zh="就業發展部專員將審閱您的資料。">A Workforce specialist will review your information.</span>
+        </li>
+        <li>
+          <span data-en="We will contact you within 3 business days at the phone or email you provided." data-zh="我們將在 3 個工作天內透過您提供的電話或電子郵件聯絡您。">We will contact you within 3 business days at the phone or email you provided.</span>
+        </li>
+        <li>
+          <span data-en="If you do not hear from us, call (213) 808-1700." data-zh="若未收到回覆，請致電 (213) 808-1700。">If you do not hear from us, call (213) 808-1700.</span>
+        </li>
+      </ol>
+
+      <div class="success-qr" id="successQr" hidden>
+        <img id="qrImg" alt="" width="120" height="120">
+        <div class="success-qr__caption" data-en="Scan to start another form on your phone" data-zh="掃描以在手機上填寫另一份表格">Scan to start another form on your phone</div>
+      </div>
+
+      <div class="success-actions">
+        <button type="button" class="btn btn--ghost" id="newForm" data-en="Start another form" data-zh="開始另一份表格">Start another form</button>
+        <button type="button" class="btn btn--ghost" id="printConfirm" data-en="Print this page" data-zh="列印此頁">Print this page</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <div class="site-footer__col">
+      <div class="site-footer__org" data-en="Chinatown Service Center · Workforce Development" data-zh="華埠服務中心 · 就業發展部">Chinatown Service Center · Workforce Development</div>
+      <div class="site-footer__addr">
+        767 N Hill St, Suite 200, Los Angeles, CA 90012<br>
+        <a href="tel:+12138081700">(213) 808-1700</a> · <a href="mailto:workforce@cscla.org">workforce@cscla.org</a>
+      </div>
+    </div>
+    <div class="site-footer__col site-footer__col--actions">
+      <a href="?mode=staff" id="modeToggle" class="text-link" data-en="Switch to staff mode" data-zh="切換至工作人員模式">Switch to staff mode</a>
+      <a href="#" id="openSheet" class="text-link" hidden data-en="Open submissions Sheet" data-zh="開啟提交資料表">Open submissions Sheet</a>
+      <button type="button" id="printBlank" class="text-link" data-en="Print blank form" data-zh="列印空白表格">Print blank form</button>
+      <button type="button" id="clearDraft" class="text-link text-link--danger" data-en="Clear & start new" data-zh="清除並重新開始">Clear & start new</button>
+    </div>
+  </div>
+  <div class="site-footer__legal">
+    <span data-en="Your information is confidential. CSC does not share data with immigration authorities." data-zh="您的資料受保密保護。華埠服務中心不會與移民部門分享資料。">Your information is confidential. CSC does not share data with immigration authorities.</span>
+  </div>
+</footer>
+
+<script src="script.js" defer></script>
+</body>
+</html>
