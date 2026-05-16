@@ -17,10 +17,8 @@ const STORAGE_KEY_STAFF = "workforceIntakeStaffName";
 const I18N = {
   errors: {
     required: { en: "This field is required.", zh: "此欄位為必填。" },
-    requiredPlural: { en: "Please complete the highlighted fields.", zh: "請填寫標示的欄位。" },
     phone: { en: "Please enter a valid phone number.", zh: "請輸入有效的電話號碼。" },
     email: { en: "Please enter a valid email.", zh: "請輸入有效的電子郵件。" },
-    dob: { en: "Please enter a valid date of birth.", zh: "請輸入有效的出生日期。" },
     consent: { en: "Please confirm you have read the certification.", zh: "請確認您已閱讀證明聲明。" },
     signature: { en: "Please add your signature.", zh: "請簽名。" },
     network: { en: "Could not submit. Please check your connection and try again.", zh: "提交失敗。請檢查網路連線後再試。" },
@@ -31,7 +29,6 @@ const I18N = {
     fixThese: { en: "Please fix the following:", zh: "請修正以下項目：" },
     submitting: { en: "Submitting…", zh: "提交中…" },
     submit: { en: "Submit Form", zh: "提交表格" },
-    retry: { en: "Try again", zh: "重新嘗試" },
     confirmClear: { en: "Clear all entered data and start over?", zh: "確定要清除所有資料並重新開始嗎？" },
     previewMode: {
       en: "Preview mode — backend not yet configured. Submission was logged to the console.",
@@ -266,7 +263,6 @@ function validateAll() {
   let consentErr = null;
   if (consent && !consent.checked) {
     consentErr = I18N.errors.consent[lang];
-    consent.closest(".check")?.classList.add("has-error");
   }
   let signatureErr = null;
   if (signaturePad.isEmpty()) {
@@ -458,24 +454,17 @@ function collectFormData() {
   const data = {};
   const fd = new FormData(form);
 
-  // group checkboxes that share a name
-  const multi = new Set();
-  form.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
-    const others = form.querySelectorAll(`input[type="checkbox"][name="${cb.name}"]`);
-    if (others.length > 1) multi.add(cb.name);
-  });
+  // One pass: tally checkbox occurrences per name to find multi-value groups.
+  const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+  const cbCounts = new Map();
+  checkboxes.forEach((cb) => cbCounts.set(cb.name, (cbCounts.get(cb.name) || 0) + 1));
 
   for (const key of fd.keys()) {
-    if (multi.has(key)) {
-      data[key] = fd.getAll(key);
-    } else {
-      data[key] = fd.get(key);
-    }
+    data[key] = cbCounts.get(key) > 1 ? fd.getAll(key) : fd.get(key);
   }
-  // single checkboxes that are unchecked don't appear in FormData — record them
-  form.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
-    if (multi.has(cb.name)) return;
-    data[cb.name] = cb.checked;
+  // Single checkboxes that are unchecked don't appear in FormData — record them as false.
+  checkboxes.forEach((cb) => {
+    if (cbCounts.get(cb.name) === 1) data[cb.name] = cb.checked;
   });
   return data;
 }
@@ -483,9 +472,14 @@ function collectFormData() {
 // =================================================================
 // SUBMIT
 // =================================================================
+let isSubmitting = false;
 async function handleSubmit(e) {
   e.preventDefault();
+  // Single-flight guard — blocks rapid double-submit (e.g. Enter pressed twice
+  // before the disabled button state propagates).
+  if (isSubmitting) return;
   if (!validateAll()) return;
+  isSubmitting = true;
 
   const submitBtn = document.getElementById("submitBtn");
   const lang = getLang();
@@ -541,6 +535,8 @@ async function handleSubmit(e) {
     submitBtn.disabled = false;
     submitBtn.classList.remove("is-loading");
     if (label) label.textContent = I18N.labels.submit[lang];
+  } finally {
+    isSubmitting = false;
   }
 }
 

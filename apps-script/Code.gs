@@ -85,7 +85,7 @@ const HEADERS = [
   "lang",
   "mode",
   "user_agent",
-  "client_ip",
+  "client_bucket", // MD5 hash of UA+body for soft rate-limit bucketing; NOT a real IP
 ];
 
 // =================================================================
@@ -225,7 +225,7 @@ function appendRow_(ref, data, meta, signatureUrl, ip) {
     lang: meta.lang || "",
     mode: meta.mode || "",
     user_agent: meta.user_agent || "",
-    client_ip: ip || "",
+    client_bucket: ip || "",
   });
 
   const row = HEADERS.map((h) => {

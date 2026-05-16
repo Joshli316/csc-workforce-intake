@@ -12,12 +12,16 @@ Bilingual (English/Traditional Chinese) online intake form for the Chinatown Ser
 ```
 csc-workforce-intake/
   index.html          — the form (client + staff mode)
+  404.html            — bilingual not-found page
   styles.css          — Civic-warm design system
   script.js           — form logic, wizard, signature pad, draft autosave, POST
+  _headers            — Cloudflare Pages security headers (CSP, HSTS, etc.)
+  robots.txt          — single-page allow-all
   apps-script/
     Code.gs           — Apps Script backend (paste into script.google.com)
     README.md         — deploy steps for the Web App
   README.md           — project overview + setup steps for staff
+  verify-report.md    — last /verify run output
 ```
 
 ## Entry Point
