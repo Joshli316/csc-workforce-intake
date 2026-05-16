@@ -495,7 +495,7 @@ body[data-mode="staff"] .section-head--inline h2 {
    Job entry
    ================================================================= */
 .job-entry {
-  padding-top: 20px;
+  padding: 20px 0 4px;
   margin-top: 20px;
   border-top: 1px solid var(--border);
 }
@@ -505,6 +505,29 @@ body[data-mode="staff"] .section-head--inline h2 {
   font-weight: 700;
   margin: 0 0 16px;
   color: var(--csc-red-dark);
+}
+
+/* Most Recent — visually weighted. The funder care most about this one. */
+.job-entry--primary {
+  background: var(--surface-2);
+  border-left: 3px solid var(--csc-red);
+  padding: 18px 20px;
+  margin: 0 -4px 24px;
+  border-radius: 0 6px 6px 0;
+}
+.job-entry--primary .job-entry__title {
+  font-size: 18px;
+}
+
+/* Earliest — visually receded. Nice-to-have, not the headline. */
+.job-entry--muted .job-entry__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  letter-spacing: 0.01em;
+}
+.job-entry--muted .field-label {
+  color: var(--ink-soft);
 }
 
 /* =================================================================
