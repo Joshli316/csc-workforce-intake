@@ -275,10 +275,12 @@ function appendRow_(ref, data, meta, signatureUrl, bucket) {
   }
 
   // submitted_at is ALWAYS server-clock — a kiosk with a bad clock could
-  // otherwise stamp rows with 1970 or 2099, breaking date-sort.
+  // otherwise stamp rows with 1970 or 2099, breaking date-sort. Stored as
+  // a Date object (not ISO string) so the Sheet renders it per the column's
+  // number format and sorts chronologically.
   const merged = Object.assign({}, data, {
     ref,
-    submitted_at: new Date().toISOString(),
+    submitted_at: new Date(),
     signature_url: signatureUrl,
     lang: meta.lang || "",
     mode: meta.mode || "",
@@ -419,7 +421,7 @@ function jsonResponse_(obj) {
 // MANUAL UTILITIES — run from the Apps Script editor as needed
 // =================================================================
 
-/** One-time: create headers row if you'd rather seed it manually. */
+/** One-time: create headers row + apply readable column number formats. */
 function setupSheet() {
   const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
   let sheet = ss.getSheetByName(CONFIG.SHEET_TAB_NAME);
@@ -427,10 +429,25 @@ function setupSheet() {
   sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
   sheet.setFrozenRows(1);
   sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold");
-  // getUi() only works when invoked from a Sheet-bound menu, not from the
-  // Apps Script editor — wrap so a standalone-editor run still succeeds.
+
+  // Human-readable column formats. Cell number format only applies when the
+  // cell contains a date/number value (not a string), so this works with
+  // appendRow_ writing `new Date()` for submitted_at.
+  const dateTimeCols = ["submitted_at"];
+  const dateCols = ["intake_date", "dob", "immigrant_date", "signature_date"];
+  dateTimeCols.forEach((h) => {
+    const i = HEADERS.indexOf(h);
+    if (i >= 0) sheet.getRange(2, i + 1, sheet.getMaxRows() - 1, 1)
+      .setNumberFormat("yyyy-mm-dd  h:mm am/pm");
+  });
+  dateCols.forEach((h) => {
+    const i = HEADERS.indexOf(h);
+    if (i >= 0) sheet.getRange(2, i + 1, sheet.getMaxRows() - 1, 1)
+      .setNumberFormat("yyyy-mm-dd");
+  });
+
   try { SpreadsheetApp.getUi().alert("Sheet headers written."); } catch (_) {}
-  console.log("Sheet headers written.");
+  console.log("Sheet headers + column formats applied.");
 }
 
 /**
@@ -439,12 +456,14 @@ function setupSheet() {
  * outage (Apps Script broken / mail quota burned) shows up as a missing
  * email rather than a missing submission.
  *
+ * Public (no trailing underscore) so it appears in the Triggers dropdown.
+ *
  * To install: Apps Script editor → Triggers (clock icon) → Add Trigger
- *   Function: dailyHealthCheck_
+ *   Function: dailyHealthCheck
  *   Event source: Time-driven
  *   Type: Day timer, "Between 8am and 9am"
  */
-function dailyHealthCheck_() {
+function dailyHealthCheck() {
   const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
   const sheet = ss.getSheetByName(CONFIG.SHEET_TAB_NAME);
   if (!sheet) return;
