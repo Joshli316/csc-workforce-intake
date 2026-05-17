@@ -231,8 +231,6 @@ body[data-mode="staff"] .form-section { display: block; }
 body[data-mode="staff"] .form-section[data-step="success"] { display: none; }
 body[data-mode="staff"] .form-section[data-step="success"].is-active { display: block; }
 body[data-mode="staff"] .form-section[data-step="0"] { display: none; }
-/* meta section is only visible in staff mode */
-body[data-mode="client"] .form-section--staff-only { display: none !important; }
 
 /* =================================================================
    Section card — the workhorse
@@ -376,6 +374,12 @@ body[data-mode="staff"] .section-head--inline h2 {
 }
 @media (max-width: 600px) {
   .field-grid { grid-template-columns: 1fr; gap: 18px; }
+}
+/* 3-column variant for the intake-header strip (Intake Date / Staff /
+   Referral Source). Collapses to single column on phones. */
+.field-grid--3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 600px) {
+  .field-grid--3 { grid-template-columns: 1fr; }
 }
 
 .field { display: block; min-width: 0; }

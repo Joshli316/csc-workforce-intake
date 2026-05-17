@@ -126,11 +126,11 @@ function applyMode() {
   }
 }
 
-// Fill today's date into staff-mode date fields if blank. Idempotent —
-// safe to call repeatedly. Separated from applyMode() so it can run after
-// restoreDraft() without re-binding the staff_name input listener.
-function applyStaffDateDefaults() {
-  if (getMode() !== "staff") return;
+// Pre-fill today's date into intake_date and signature_date if blank.
+// Applies in both client and staff modes — the three intake-header fields
+// are now visible to clients too, and "today" is the right default for an
+// in-person intake. Idempotent so it can run after restoreDraft.
+function applyIntakeDateDefaults() {
   const today = new Date().toISOString().slice(0, 10);
   const intake = document.getElementById("intake_date");
   if (intake && !intake.value) intake.value = today;
@@ -689,7 +689,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // mode + staff defaults (date defaults run again post-restoreDraft, below)
   applyMode();
-  applyStaffDateDefaults();
+  applyIntakeDateDefaults();
 
   // wizard
   wizard.init();
@@ -720,7 +720,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // restore draft, then top up staff-mode date defaults (the draft may have
   // restored empty values that overrode the initial pre-fill)
   restoreDraft();
-  applyStaffDateDefaults();
+  applyIntakeDateDefaults();
   applyConditionals();
 
   // staff-mode footer: show "Open submissions Sheet" link if configured
@@ -747,13 +747,9 @@ document.addEventListener("DOMContentLoaded", () => {
     location.reload();
   });
 
-  // pre-fill today's signature date in client mode if blank (helps clients who skip it)
-  const sigDate = document.getElementById("signature_date");
-  const today = new Date().toISOString().slice(0, 10);
-  if (sigDate && !sigDate.value) sigDate.value = today;
-
   // Cap date pickers at today so clients can't pick a future DOB or sign a
   // form dated 2099. iOS/Android pickers respect the max attribute.
+  const today = new Date().toISOString().slice(0, 10);
   document.querySelectorAll('input[name="dob"], input[name="signature_date"], input[name="intake_date"]')
     .forEach((d) => d.setAttribute("max", today));
 });

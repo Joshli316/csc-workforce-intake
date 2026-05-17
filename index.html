@@ -78,13 +78,15 @@
 
   <form id="intakeForm" novalidate>
 
-  <!-- INTAKE META (staff-only fields) -->
-  <section class="form-section form-section--staff-only" data-step="meta" data-section-name="meta">
+  <!-- STEP 1 — IDENTIFICATION / 個人資料 -->
+  <section class="form-section" data-step="1" data-section-name="identification">
+
+    <!-- Intake header strip — matches the three fields at the very top of the
+         paper form (Intake Date / Staff / Referral Source). Visible in both
+         client and staff modes; staff mode auto-fills today's date + the
+         last-seen staff name. -->
     <div class="section-card section-card--strip">
-      <header class="section-head section-head--inline">
-        <h2><span data-en="Intake" data-zh="登記">Intake</span></h2>
-      </header>
-      <div class="field-grid">
+      <div class="field-grid field-grid--3">
         <label class="field">
           <span class="field-label" data-en="Intake Date" data-zh="登記日期">Intake Date</span>
           <input type="date" name="intake_date" id="intake_date">
@@ -93,16 +95,13 @@
           <span class="field-label" data-en="Staff" data-zh="工作人員">Staff</span>
           <input type="text" name="staff_name" id="staff_name" autocomplete="name">
         </label>
-        <label class="field field--full">
+        <label class="field">
           <span class="field-label" data-en="Referral Source" data-zh="轉介來源">Referral Source</span>
           <input type="text" name="referral_source">
         </label>
       </div>
     </div>
-  </section>
 
-  <!-- STEP 1 — IDENTIFICATION / 個人資料 -->
-  <section class="form-section" data-step="1" data-section-name="identification">
     <div class="section-card section-card--primary">
       <header class="section-head">
         <h2><span data-en="Identification" data-zh="個人資料">Identification</span></h2>
