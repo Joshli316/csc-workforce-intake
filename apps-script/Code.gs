@@ -17,69 +17,97 @@ const CONFIG = {
   SHEET_TAB_NAME: "Submissions",
   COUNTER_TAB_NAME: "_meta",
   DRIVE_FOLDER_ID: "REPLACE_WITH_DRIVE_FOLDER_ID",
-  NOTIFY_EMAIL: "workforce@cscla.org",
+  NOTIFY_EMAIL: "cscworkforcedev@gmail.com",
   ORG_NAME: "Chinatown Service Center",
   REF_PREFIX: "WD",
   RATE_LIMIT_PER_HOUR: 30,
 };
 
-// Columns written to the Sheet, in this order. Edit to match your reporting needs.
+// Columns written to the Sheet, in this order. Mirrors the paper Workforce
+// Development Intake Form (REV 1/22/2026) field-for-field.
 const HEADERS = [
   "ref",
   "submitted_at",
+  // intake header
   "intake_date",
   "staff_name",
   "referral_source",
   // identification
   "last_name",
   "first_name",
-  "middle_name",
-  "preferred_name",
   "dob",
-  "gender",
-  "phone",
-  "email",
-  "best_contact",
   "address",
-  "address_apt",
   "city",
   "state",
   "zip",
+  "phone",
   "ssn",
+  "email",
+  "contact_method",
   // demographics
-  "race",
-  "primary_language",
-  "english_level",
-  "citizenship",
-  "marital",
+  "income",
+  "income_period",
   "household_size",
-  "veteran",
-  "disability",
-  "single_parent",
-  // education + employment
+  "gender",
+  "gender_other",
+  "primary_language",
+  "primary_language_other",
+  "race",
+  "race_other",
+  "ethnicity",
+  "work_eligible",
+  "immigrant",
+  "immigrant_date",
+  "residency",
+  "residency_other",
+  "housing",
+  "housing_other",
+  "commute",
+  "commute_other",
+  // education
   "education_level",
-  "in_school",
-  "last_school",
-  "emp_status",
-  "unemployed_duration",
-  "receives_ui",
-  // services + support
+  "major",
+  "licenses",
+  "esl",
+  "esl_proficiency",
+  "dislocated_worker",
+  // requested services
   "services",
-  "services_other",
-  "support",
-  "notes",
+  "services_seeking",
+  "financial_situation",
+  "jobs_seeking",
+  "jobs_avoid",
+  "emp_status_current",
+  "emp_status_seeking",
+  "emp_status_seeking_other",
+  // additional support needs
+  "programs",
+  "justice_involved",
+  "veteran",
+  "physical_limits",
+  "physical_limits_desc",
+  "can_stand_4h",
+  "can_lift_bend",
+  "mental_health",
+  "mental_health_desc",
+  "accommodations",
+  "accommodations_desc",
   // emergency contact
   "emergency_name",
-  "emergency_phone",
   "emergency_relationship",
-  // employment history
-  "job1_employer", "job1_title", "job1_start", "job1_end", "job1_reason",
-  "job2_employer", "job2_title", "job2_start", "job2_end", "job2_reason",
-  "job3_employer", "job3_title", "job3_start", "job3_end", "job3_reason",
+  "emergency_phone",
+  "emergency_email",
+  // employment history (3 entries × 9 fields)
+  "job1_employer", "job1_title", "job1_start", "job1_end", "job1_status",
+  "job1_duties", "job1_liked", "job1_disliked", "job1_reason",
+  "job2_employer", "job2_title", "job2_start", "job2_end", "job2_status",
+  "job2_duties", "job2_liked", "job2_disliked", "job2_reason",
+  "job3_employer", "job3_title", "job3_start", "job3_end", "job3_status",
+  "job3_duties", "job3_liked", "job3_disliked", "job3_reason",
   // certification
   "consent",
-  "signature_date",
   "printed_name",
+  "signature_date",
   "signature_url",
   // meta
   "lang",
@@ -294,9 +322,11 @@ function getClientIp_(e) {
 // =================================================================
 // JSON RESPONSE
 // =================================================================
-function jsonResponse_(obj, statusCode) {
-  // Note: Apps Script ContentService doesn't expose a setStatusCode method on
-  // most return paths, but the body is what the client checks.
+function jsonResponse_(obj, _statusCode) {
+  // Apps Script ContentService can't set HTTP status codes on the web app
+  // return path, so _statusCode is intentionally unused — the client branches
+  // on the JSON body's `error` field instead. Leaving call sites passing 429 /
+  // 400 / 500 so the intent is documented at the throw site.
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
@@ -314,7 +344,10 @@ function setupSheet() {
   sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
   sheet.setFrozenRows(1);
   sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold");
-  SpreadsheetApp.getUi().alert("Sheet headers written.");
+  // getUi() only works when invoked from a Sheet-bound menu, not from the
+  // Apps Script editor — wrap so a standalone-editor run still succeeds.
+  try { SpreadsheetApp.getUi().alert("Sheet headers written."); } catch (_) {}
+  console.log("Sheet headers written.");
 }
 
 /** Quick test — paste into the editor + run to verify your config. */

@@ -36,6 +36,9 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 html, body { margin: 0; padding: 0; }
+/* Honor the HTML `hidden` attribute even when an element's display rule
+   would otherwise override it (e.g. `.field { display: block }`). */
+[hidden] { display: none !important; }
 body {
   font-family: var(--font-body);
   font-size: 18px;
@@ -499,6 +502,24 @@ body[data-mode="staff"] .section-head--inline h2 {
   outline-offset: 2px;
 }
 
+/* 1–5 scale variant for ESL proficiency */
+.radios--scale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.radios--scale .radio {
+  flex: 0 0 auto;
+  min-width: 56px;
+  justify-content: center;
+  padding: 8px 12px;
+}
+
+/* Conditional fields revealed by data-show-if get a little top spacing */
+[data-show-if]:not([hidden]) {
+  margin-top: 12px;
+}
+
 /* =================================================================
    Job entry
    ================================================================= */
@@ -603,6 +624,8 @@ body[data-mode="staff"] .section-head--inline h2 {
 }
 .wizard-nav--end { justify-content: flex-end; }
 body[data-mode="staff"] .wizard-nav--client { display: none; }
+/* Staff mode is one dense page — no wizard Back button, just the submit. */
+body[data-mode="staff"] .wizard-nav__back { display: none; }
 .wizard-nav .btn { flex: 1 1 auto; max-width: 240px; }
 .wizard-nav--end .btn { max-width: 280px; }
 

@@ -5,10 +5,10 @@
 // Paste the Apps Script Web App /exec URL here after deploying.
 // Leave blank during local dev — the form will run in "preview" mode and
 // log the payload instead of POSTing.
-const APPS_SCRIPT_URL = "";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHC7XXw01KHuZLGSfbkyZAmgYncVe_HUgeJYLekRIg5ef0lwPPQHblje1iHLpo3l-bmw/exec";
 // Optional: link staff to the Google Sheet from the footer in staff mode.
 // Leave blank to hide the link.
-const SUBMISSIONS_SHEET_URL = "";
+const SUBMISSIONS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1oHxWDlrNxSkMquUPksB4s4ckxFe9QVlphPTDjOKc-ns/edit";
 
 const STORAGE_KEY_DRAFT = "workforceIntakeDraft";
 const STORAGE_KEY_LANG = "workforceIntakeLang";
@@ -37,7 +37,7 @@ const I18N = {
   },
 };
 
-const REQUIRED_FIELDS = ["last_name", "first_name", "dob", "phone", "signature_date"];
+const REQUIRED_FIELDS = ["last_name", "first_name", "dob", "phone", "printed_name", "signature_date"];
 
 // =================================================================
 // LANGUAGE
@@ -169,6 +169,11 @@ const wizard = {
 
   showSuccess() {
     document.querySelectorAll(".form-section").forEach((s) => s.classList.remove("is-active"));
+    // In staff mode, every form section is display:block — hide the whole form
+    // so the success card stands alone (without the stale "Submitting..." button
+    // and filled fields showing above it).
+    const form = document.getElementById("intakeForm");
+    if (form) form.hidden = true;
     const success = document.querySelector('.form-section[data-step="success"]');
     if (success) {
       success.hidden = false;
@@ -316,6 +321,13 @@ const signaturePad = (() => {
     ctx = canvas.getContext("2d");
     resize();
     window.addEventListener("resize", resize);
+    // The canvas is inside a wizard step that's display:none until the user
+    // advances. At init time its CSS box is 0x0, so resize() sets the pixel
+    // buffer to 0x0 and strokes silently no-op. ResizeObserver re-fires resize()
+    // when the canvas becomes visible (or any time its CSS box changes).
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(() => resize()).observe(canvas);
+    }
 
     canvas.addEventListener("pointerdown", start);
     canvas.addEventListener("pointermove", move);
@@ -331,11 +343,16 @@ const signaturePad = (() => {
   function resize() {
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return; // not yet in layout
     const dpr = window.devicePixelRatio || 1;
-    // preserve current drawing
-    const tmp = document.createElement("canvas");
-    tmp.width = canvas.width; tmp.height = canvas.height;
-    tmp.getContext("2d").drawImage(canvas, 0, 0);
+    // Preserve current drawing if there is one. drawImage() throws
+    // INDEX_SIZE_ERR when source canvas is 0x0, so guard on prior dims.
+    let tmp = null;
+    if (canvas.width > 0 && canvas.height > 0 && hasInk) {
+      tmp = document.createElement("canvas");
+      tmp.width = canvas.width; tmp.height = canvas.height;
+      tmp.getContext("2d").drawImage(canvas, 0, 0);
+    }
     canvas.width = Math.floor(rect.width * dpr);
     canvas.height = Math.floor(rect.height * dpr);
     ctx = canvas.getContext("2d");
@@ -344,7 +361,7 @@ const signaturePad = (() => {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.strokeStyle = "#1A1A1A";
-    if (hasInk) {
+    if (tmp) {
       ctx.drawImage(tmp, 0, 0, rect.width, rect.height);
     }
   }
@@ -355,6 +372,10 @@ const signaturePad = (() => {
   }
 
   function start(e) {
+    // Defensive: if the canvas was hidden at init() time (wizard step not yet
+    // active), its pixel buffer may still be 0x0. Re-size before the first
+    // stroke so strokes actually render.
+    if (canvas.width === 0 || canvas.height === 0) resize();
     drawing = true;
     canvas.setPointerCapture?.(e.pointerId);
     const p = getPoint(e);
@@ -396,6 +417,23 @@ const signaturePad = (() => {
 })();
 
 // =================================================================
+// CONDITIONAL FIELDS — show/hide based on another field's value
+// Triggered by data-show-if="fieldName=value" on any element.
+// Reads form state via collectFormData() so the multi-value / checkbox
+// / radio branching lives in exactly one place.
+// =================================================================
+let conditionalEls = [];
+function applyConditionals() {
+  if (!document.getElementById("intakeForm")) return;
+  const data = collectFormData();
+  conditionalEls.forEach((el) => {
+    const [name, expected] = el.dataset.showIf.split("=");
+    const v = data[name];
+    el.hidden = Array.isArray(v) ? !v.includes(expected) : v !== expected;
+  });
+}
+
+// =================================================================
 // AUTOSAVE — every input change, debounced
 // =================================================================
 let saveTimer = null;
@@ -403,10 +441,14 @@ function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveDraft, 500);
 }
+// Fields that must never persist in localStorage. SSN especially — a shared
+// kiosk tablet could leak it to the next user via the autosaved draft.
+const DRAFT_REDACT = ["ssn", "signature"];
+
 function saveDraft() {
   try {
     const data = collectFormData();
-    delete data.signature; // signature pixels don't autosave
+    DRAFT_REDACT.forEach((k) => { delete data[k]; });
     localStorage.setItem(STORAGE_KEY_DRAFT, JSON.stringify(data));
   } catch (e) {
     console.warn("Draft save failed", e);
@@ -615,14 +657,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("intakeForm");
   form.addEventListener("submit", handleSubmit);
 
-  // autosave
+  // autosave fires on every input; conditional reveals only depend on radio /
+  // checkbox / select values (which fire `change`), so we don't need to recompute
+  // them on every keystroke in unrelated text fields.
+  conditionalEls = Array.from(document.querySelectorAll("[data-show-if]"));
   form.addEventListener("input", scheduleSave);
-  form.addEventListener("change", scheduleSave);
+  form.addEventListener("change", () => { scheduleSave(); applyConditionals(); });
+  applyConditionals();
 
   // restore draft, then top up staff-mode date defaults (the draft may have
   // restored empty values that overrode the initial pre-fill)
   restoreDraft();
   applyStaffDateDefaults();
+  applyConditionals();
 
   // staff-mode footer: show "Open submissions Sheet" link if configured
   const sheetLink = document.getElementById("openSheet");
