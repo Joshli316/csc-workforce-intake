@@ -30,6 +30,20 @@ for f in "${PROD_FILES[@]}"; do
   cp "$f" "$DIST/"
 done
 
+# Reverse-drift guard: warn if a deployable-looking file exists in the repo
+# root but isn't in PROD_FILES. Catches "added new asset, forgot to whitelist."
+shopt -s nullglob
+ORPHANS=()
+for f in *.html *.css *.js *.xml *.txt *.svg *.png *.json; do
+  [[ -f "$f" ]] || continue
+  printf '%s\n' "${PROD_FILES[@]}" | grep -qFx "$f" || ORPHANS+=("$f")
+done
+if (( ${#ORPHANS[@]} )); then
+  echo "⚠ root files not in PROD_FILES (won't be deployed):" >&2
+  printf '   %s\n' "${ORPHANS[@]}" >&2
+fi
+shopt -u nullglob
+
 echo "→ deploying $(ls -1 "$DIST" | wc -l | tr -d ' ') files from $DIST/"
 npx wrangler pages deploy "$DIST" \
   --project-name "$PROJECT" \

@@ -39,6 +39,21 @@ const I18N = {
 
 const REQUIRED_FIELDS = ["last_name", "first_name", "dob", "phone", "printed_name", "signature_date"];
 
+// Labels for the step indicator above the progress bar — section names
+// match the PDF's section headings verbatim (parity-locked) so this is
+// safe to display without disturbing form copy.
+const STEP_NAMES = {
+  identification:    { en: "Identification",            zh: "個人資料" },
+  demographics:      { en: "Demographics",              zh: "人口統計資料" },
+  education:         { en: "Education",                 zh: "教育背景" },
+  services:          { en: "Requested Services",        zh: "申請服務項目" },
+  support_needs:     { en: "Additional Support Needs",  zh: "額外支援需求" },
+  contacts_history:  { en: "Emergency Contact",         zh: "緊急聯絡人" },
+  certification:    { en: "Certification",              zh: "聲明與確認" },
+};
+
+const SUBMIT_TIMEOUT_MS = 30000;
+
 // =================================================================
 // LANGUAGE
 // =================================================================
@@ -148,6 +163,13 @@ const wizard = {
     });
     this.updateProgress();
     window.scrollTo({ top: 0, behavior: "smooth" });
+    // Move focus to the new step's heading so screen readers announce the
+    // transition. Set tabindex first since H2s aren't natively focusable.
+    const heading = this.steps[this.index].querySelector("h1, h2");
+    if (heading) {
+      heading.setAttribute("tabindex", "-1");
+      heading.focus({ preventScroll: true });
+    }
   },
 
   next() {
@@ -162,9 +184,30 @@ const wizard = {
 
   updateProgress() {
     const fill = document.getElementById("progressFill");
-    if (!fill) return;
-    const pct = ((this.index) / (this.steps.length - 1)) * 100;
-    fill.style.width = `${pct}%`;
+    if (fill) {
+      const pct = ((this.index) / (this.steps.length - 1)) * 100;
+      fill.style.width = `${pct}%`;
+    }
+    // Step counter "Step 2 of 6 · Identification" — hidden on welcome step.
+    const indicator = document.getElementById("stepIndicator");
+    const countEl = document.getElementById("stepIndicatorCount");
+    const nameEl = document.getElementById("stepIndicatorName");
+    if (indicator && countEl && nameEl) {
+      const formSteps = this.steps.length - 1; // excludes welcome
+      if (this.index === 0) {
+        indicator.hidden = true;
+      } else {
+        indicator.hidden = false;
+        const lang = getLang();
+        countEl.textContent = lang === "zh"
+          ? `第 ${this.index} 步，共 ${formSteps} 步`
+          : `Step ${this.index} of ${formSteps}`;
+        const sectionName = this.steps[this.index].dataset.sectionName || "";
+        nameEl.textContent = STEP_NAMES[sectionName]
+          ? STEP_NAMES[sectionName][lang]
+          : "";
+      }
+    }
   },
 
   showSuccess() {
@@ -527,12 +570,20 @@ async function handleSubmit(e) {
   const label = submitBtn.querySelector(".btn__label");
   if (label) label.textContent = I18N.labels.submitting[lang];
 
+  // Idempotency: stable per submit attempt, so a network-retry that lands
+  // a second POST gets the cached ref instead of creating a duplicate row.
+  // crypto.randomUUID is widely supported; fall back to Date.now()+random
+  // for ancient browsers without breaking the submit.
+  const idempotencyKey = (crypto && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
   const payload = {
     action: "submit",
+    idempotency_key: idempotencyKey,
     data: collectFormData(),
     signature: signaturePad.toDataURL(),
     meta: {
-      submitted_at: new Date().toISOString(),
       lang,
       mode: getMode(),
       user_agent: navigator.userAgent,
@@ -547,22 +598,26 @@ async function handleSubmit(e) {
       const year = new Date().getFullYear();
       result = { ok: true, ref: `WD-${year}-PREVIEW`, preview: true };
     } else {
-      const res = await fetch(APPS_SCRIPT_URL, {
-        method: "POST",
-        // Apps Script web apps prefer text/plain to bypass CORS preflight
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload),
-      });
-      if (res.status === 429) {
-        throw new Error("rate_limit");
+      // Bound the wait so a hung Apps Script call doesn't lock the
+      // spinner forever — user sees a network error after 30s.
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS);
+      let res;
+      try {
+        res = await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
       }
-      if (!res.ok) {
-        throw new Error("server");
-      }
+      // Apps Script Web Apps always return 200 — error signal lives in the
+      // JSON body's `ok` / `error` fields, not the HTTP status.
+      if (!res.ok) throw new Error("server");
       result = await res.json();
-      if (!result.ok) {
-        throw new Error(result.error || "server");
-      }
+      if (!result.ok) throw new Error(result.error || "server");
     }
     onSubmitSuccess(result);
   } catch (err) {
@@ -599,7 +654,7 @@ function onSubmitSuccess(result) {
     qrUrlLink.href = baseUrl;
     // Render the URL without the scheme so it scans visually like a hand-off card.
     qrUrlLink.textContent = baseUrl.replace(/^https?:\/\//, "");
-    qrImg.onerror = () => { qrImg.style.display = "none"; };
+    qrImg.onerror = () => qrImg.classList.add("is-hidden");
     qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=${encodeURIComponent(baseUrl)}`;
     qrBlock.hidden = false;
   }
@@ -608,10 +663,7 @@ function onSubmitSuccess(result) {
   if (result.preview) {
     const lang = getLang();
     const notice = document.createElement("div");
-    notice.className = "error-summary";
-    notice.style.color = "#854D0E";
-    notice.style.background = "#FEF9C3";
-    notice.style.borderColor = "#EAB308";
+    notice.className = "error-summary error-summary--notice";
     notice.textContent = I18N.labels.previewMode[lang];
     document.querySelector(".section-card--success")?.prepend(notice);
   }
@@ -697,7 +749,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // pre-fill today's signature date in client mode if blank (helps clients who skip it)
   const sigDate = document.getElementById("signature_date");
-  if (sigDate && !sigDate.value) {
-    sigDate.value = new Date().toISOString().slice(0, 10);
-  }
+  const today = new Date().toISOString().slice(0, 10);
+  if (sigDate && !sigDate.value) sigDate.value = today;
+
+  // Cap date pickers at today so clients can't pick a future DOB or sign a
+  // form dated 2099. iOS/Android pickers respect the max attribute.
+  document.querySelectorAll('input[name="dob"], input[name="signature_date"], input[name="intake_date"]')
+    .forEach((d) => d.setAttribute("max", today));
 });

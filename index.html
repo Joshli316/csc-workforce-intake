@@ -20,6 +20,12 @@
 <a class="skip-link" href="#main" data-en="Skip to form" data-zh="跳至表格">Skip to form</a>
 
 <div class="progress-bar" id="progressBar" aria-hidden="true"><div class="progress-bar__fill" id="progressFill"></div></div>
+<div class="step-indicator" id="stepIndicator" aria-live="polite" hidden>
+  <span class="step-indicator__count" id="stepIndicatorCount"></span>
+  <span class="step-indicator__name" id="stepIndicatorName"></span>
+</div>
+
+<div id="errorSummary" class="error-summary error-summary--floating" hidden aria-live="polite"></div>
 
 <header class="site-header">
   <div class="site-header__inner">
@@ -107,14 +113,14 @@
         <label class="field">
           <span class="field-label">
             <span data-en="Last Name" data-zh="姓">Last Name</span>
-            <span class="required" aria-label="required">*</span>
+            <span class="required" aria-hidden="true">*</span>
           </span>
           <input type="text" name="last_name" autocomplete="family-name" required>
         </label>
         <label class="field">
           <span class="field-label">
             <span data-en="First Name" data-zh="名">First Name</span>
-            <span class="required" aria-label="required">*</span>
+            <span class="required" aria-hidden="true">*</span>
           </span>
           <input type="text" name="first_name" autocomplete="given-name" required>
         </label>
@@ -122,7 +128,7 @@
         <label class="field field--full">
           <span class="field-label">
             <span data-en="Date of Birth" data-zh="出生日期">Date of Birth</span>
-            <span class="required" aria-label="required">*</span>
+            <span class="required" aria-hidden="true">*</span>
           </span>
           <input type="date" name="dob" autocomplete="bday" required>
         </label>
@@ -147,7 +153,7 @@
         <label class="field">
           <span class="field-label">
             <span data-en="Phone" data-zh="電話">Phone</span>
-            <span class="required" aria-label="required">*</span>
+            <span class="required" aria-hidden="true">*</span>
           </span>
           <input type="tel" name="phone" autocomplete="tel" inputmode="tel" placeholder="(213) 555-0100" required>
         </label>
@@ -733,8 +739,6 @@
           <button type="button" class="btn btn--ghost btn--small signature-pad__clear" id="clearSignature" data-en="Clear" data-zh="清除">Clear</button>
         </div>
       </div>
-
-      <div id="errorSummary" class="error-summary" hidden aria-live="polite"></div>
 
       <div class="wizard-nav wizard-nav--end">
         <button type="button" class="btn btn--ghost wizard-nav__back" data-action="back" data-en="← Back" data-zh="← 上一步">← Back</button>

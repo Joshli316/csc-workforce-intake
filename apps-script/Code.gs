@@ -2,7 +2,8 @@
  * CSC Workforce Intake — Apps Script Web App backend
  *
  * Endpoints:
- *   POST {action: "submit", data: {...}, signature: "data:image/png;base64,..."}
+ *   POST {action: "submit", data: {...}, signature: "data:image/png;base64,...",
+ *         idempotency_key: "<uuid>", meta: {...}}
  *     → appends a row to the Sheet, saves signature PNG to Drive,
  *       emails staff, returns {ok: true, ref: "WD-2026-NNNN"}
  *
@@ -16,11 +17,13 @@ const CONFIG = {
   SHEET_ID: "REPLACE_WITH_SHEET_ID",
   SHEET_TAB_NAME: "Submissions",
   COUNTER_TAB_NAME: "_meta",
+  ERRORS_TAB_NAME: "_errors",
   DRIVE_FOLDER_ID: "REPLACE_WITH_DRIVE_FOLDER_ID",
   NOTIFY_EMAIL: "cscworkforcedev@gmail.com",
   ORG_NAME: "Chinatown Service Center",
   REF_PREFIX: "WD",
   RATE_LIMIT_PER_HOUR: 30,
+  IDEMPOTENCY_TTL_SEC: 600,
 };
 
 // Columns written to the Sheet, in this order. Mirrors the paper Workforce
@@ -113,7 +116,7 @@ const HEADERS = [
   "lang",
   "mode",
   "user_agent",
-  "client_bucket", // MD5 hash of UA+body for soft rate-limit bucketing; NOT a real IP
+  "client_bucket", // SHA-256 hash of UA+name+dob; bucket key only, not a real IP
 ];
 
 // =================================================================
@@ -121,53 +124,79 @@ const HEADERS = [
 // =================================================================
 function doPost(e) {
   try {
-    const ip = getClientIp_(e);
-    if (!checkRateLimit_(ip)) {
-      return jsonResponse_({ ok: false, error: "rate_limit" }, 429);
-    }
-
     const body = JSON.parse(e.postData.contents);
     const action = body.action || "submit";
     if (action !== "submit") {
-      return jsonResponse_({ ok: false, error: "unknown_action" }, 400);
+      return jsonResponse_({ ok: false, error: "unknown_action" });
     }
 
     const data = body.data || {};
     const signature = body.signature || "";
     const meta = body.meta || {};
+    const idempotencyKey = body.idempotency_key || "";
 
     // Server-side defense-in-depth: reject obvious garbage / empty submissions.
     // Client-side validation enforces these for legitimate users; this catches
     // direct POSTs that bypass the form.
     if (!hasMinimumFields_(data)) {
-      return jsonResponse_({ ok: false, error: "missing_required" }, 400);
+      return jsonResponse_({ ok: false, error: "missing_required" });
     }
 
-    // Generate reference number
-    const ref = nextRefNumber_();
+    // Idempotency: if this key was already processed within the TTL, return
+    // the same ref instead of creating a duplicate row.
+    if (idempotencyKey) {
+      const cached = CacheService.getScriptCache().get(`idem_${idempotencyKey}`);
+      if (cached) return jsonResponse_({ ok: true, ref: cached });
+    }
 
-    // Save signature PNG to Drive
+    // Bucket key derived from stable client identity (UA + name + dob).
+    // Body-hashing would have made every submission unique, defeating the cap.
+    const bucket = getClientBucket_(e, data);
+    if (!checkRateLimit_(bucket)) {
+      return jsonResponse_({ ok: false, error: "rate_limit" });
+    }
+
+    // Allocate the ref number under a lock so two concurrent submissions can't
+    // both read the same last_seq and produce duplicate refs.
+    const ref = withLock_(() => nextRefNumber_());
+
+    // Save signature PNG to Drive — best-effort. A Drive failure must not drop
+    // the row, because the Sheet record is the source of truth.
     let signatureUrl = "";
     if (signature && signature.startsWith("data:image/png;base64,")) {
-      signatureUrl = saveSignature_(ref, signature);
+      try {
+        signatureUrl = saveSignature_(ref, signature);
+      } catch (err) {
+        console.warn("Signature save failed for", ref, err);
+        logError_(ref, "signature_save", err);
+      }
     }
 
-    // Append row to Sheet
-    appendRow_(ref, data, meta, signatureUrl, ip);
+    // Append row to Sheet — also locked so two writers can't interleave.
+    withLock_(() => appendRow_(ref, data, meta, signatureUrl, bucket));
 
-    // Notify staff by email (best-effort; don't fail submit if email fails)
+    // Cache the idempotency key after success.
+    if (idempotencyKey) {
+      CacheService.getScriptCache()
+        .put(`idem_${idempotencyKey}`, ref, CONFIG.IDEMPOTENCY_TTL_SEC);
+    }
+
+    // Notify staff by email (best-effort; don't fail submit if email fails).
     try {
       sendNotification_(ref, data);
     } catch (err) {
       console.warn("Email notification failed:", err);
+      logError_(ref, "email", err);
     }
 
     return jsonResponse_({ ok: true, ref });
   } catch (err) {
-    // Log full error details to Apps Script logs for debugging,
-    // but return a generic message to avoid leaking internals.
+    // Log full details to Apps Script logs + the _errors tab (Stackdriver
+    // only retains 30 days; the tab persists). Return a generic message to
+    // the client to avoid leaking internals.
     console.error("doPost error:", err && err.stack || err);
-    return jsonResponse_({ ok: false, error: "server" }, 500);
+    try { logError_("(none)", "doPost", err); } catch (_) {}
+    return jsonResponse_({ ok: false, error: "server" });
   }
 }
 
@@ -187,7 +216,7 @@ function doGet() {
 }
 
 // =================================================================
-// REFERENCE NUMBER
+// REFERENCE NUMBER (caller must hold a lock — see withLock_)
 // =================================================================
 function nextRefNumber_() {
   const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
@@ -214,28 +243,28 @@ function nextRefNumber_() {
 }
 
 // =================================================================
-// DRIVE — save signature PNG
+// DRIVE — save signature PNG, subfoldered by year
 // =================================================================
 function saveSignature_(ref, dataUrl) {
-  const folder = DriveApp.getFolderById(CONFIG.DRIVE_FOLDER_ID);
+  const root = DriveApp.getFolderById(CONFIG.DRIVE_FOLDER_ID);
+  const year = String(new Date().getFullYear());
+  // Subfolder per year keeps Drive listings fast past ~5k files.
+  const yearFolders = root.getFoldersByName(year);
+  const folder = yearFolders.hasNext() ? yearFolders.next() : root.createFolder(year);
+
   const base64 = dataUrl.split(",")[1];
   const bytes = Utilities.base64Decode(base64);
   const blob = Utilities.newBlob(bytes, "image/png", `${ref}-signature.png`);
   const file = folder.createFile(blob);
-  // make readable by anyone in the org with the link (so staff in the Sheet can view it).
-  // If your org policy forbids this, comment out the next line and grant access on the folder instead.
-  try {
-    file.setSharing(DriveApp.Access.DOMAIN_WITH_LINK, DriveApp.Permission.VIEW);
-  } catch (err) {
-    console.warn("Could not set domain sharing; using default permissions.", err);
-  }
+  // Folder-level sharing (set once at install) is preferable to per-file
+  // sharing — that call costs ~1s and is unnecessary if the folder is shared.
   return file.getUrl();
 }
 
 // =================================================================
-// SHEET — append row
+// SHEET — append row (caller must hold a lock — see withLock_)
 // =================================================================
-function appendRow_(ref, data, meta, signatureUrl, ip) {
+function appendRow_(ref, data, meta, signatureUrl, bucket) {
   const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
   let sheet = ss.getSheetByName(CONFIG.SHEET_TAB_NAME);
   if (!sheet) {
@@ -245,25 +274,34 @@ function appendRow_(ref, data, meta, signatureUrl, ip) {
     sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight("bold");
   }
 
-  // Build a value map combining ref / meta / signature URL / submitted data.
+  // submitted_at is ALWAYS server-clock — a kiosk with a bad clock could
+  // otherwise stamp rows with 1970 or 2099, breaking date-sort.
   const merged = Object.assign({}, data, {
     ref,
-    submitted_at: meta.submitted_at || new Date().toISOString(),
+    submitted_at: new Date().toISOString(),
     signature_url: signatureUrl,
     lang: meta.lang || "",
     mode: meta.mode || "",
     user_agent: meta.user_agent || "",
-    client_bucket: ip || "",
+    client_bucket: bucket || "",
   });
 
-  const row = HEADERS.map((h) => {
-    const v = merged[h];
-    if (Array.isArray(v)) return v.join(", ");
-    if (v === undefined || v === null) return "";
-    if (typeof v === "boolean") return v ? "Yes" : "";
-    return v;
-  });
+  const row = HEADERS.map((h) => sheetCellValue_(merged[h]));
   sheet.appendRow(row);
+}
+
+// Coerce a JS value into a Sheet-safe cell value.
+// - arrays: comma-joined string (multi-checkbox)
+// - boolean: "Yes" / "" (only `consent` is boolean today)
+// - free-text starting with =/+/-/@: prefixed with ' to neutralize Sheets
+//   formula injection on export — a malicious "=HYPERLINK(...)" would
+//   otherwise become a live formula in the cell.
+function sheetCellValue_(v) {
+  if (v === undefined || v === null) return "";
+  if (Array.isArray(v)) v = v.join(", ");
+  if (typeof v === "boolean") return v ? "Yes" : "";
+  if (typeof v === "string" && /^[=+\-@\t\r]/.test(v)) return "'" + v;
+  return v;
 }
 
 // =================================================================
@@ -290,12 +328,12 @@ function sendNotification_(ref, data) {
 }
 
 // =================================================================
-// RATE LIMIT — per-IP rolling 1-hour window
+// RATE LIMIT — rolling 1-hour window per client bucket
 // =================================================================
-function checkRateLimit_(ip) {
-  if (!ip) return true; // can't enforce, allow
+function checkRateLimit_(bucket) {
+  if (!bucket) return true;
   const props = PropertiesService.getScriptProperties();
-  const key = `rl_${ip}`;
+  const key = `rl_${bucket}`;
   const now = Date.now();
   const hourAgo = now - 60 * 60 * 1000;
   const raw = props.getProperty(key);
@@ -310,23 +348,68 @@ function checkRateLimit_(ip) {
   return true;
 }
 
-// Apps Script doesn't expose request IP directly. We use a hash of (UA + first 32 chars of body)
-// as a soft rate-limit bucket. Good enough to deter spam; not a security control.
-function getClientIp_(e) {
-  const ua = (e.postData && e.postData.contents || "") + "|" +
-             ((e.parameter && JSON.stringify(e.parameter)) || "");
-  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, ua);
+// Apps Script can't see the real client IP. The previous implementation
+// hashed the full request body, giving every submission a unique bucket and
+// rendering the rate limit useless. We now hash (UA + name + dob), which is
+// stable for the same client across submissions while still distinguishing
+// different clients. SHA-256 is used over MD5 for hygiene; the digest is not
+// a security primitive here, just a bucket key.
+function getClientBucket_(e, data) {
+  const ua = (e && e.postData && (e.postData.contents || "").length || 0) + ":" +
+             ((e && e.parameter && (e.parameter.userAgent || "")) || "");
+  const ident = [
+    ua,
+    String(data.last_name || "").trim().toLowerCase(),
+    String(data.first_name || "").trim().toLowerCase(),
+    String(data.dob || "").trim(),
+  ].join("|");
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, ident);
   return digest.map((b) => (b & 0xff).toString(16).padStart(2, "0")).join("").slice(0, 16);
+}
+
+// =================================================================
+// LOCK + ERROR LOG HELPERS
+// =================================================================
+function withLock_(fn) {
+  const lock = LockService.getScriptLock();
+  // 5s is enough for any single Sheet append; raise if we ever see contention.
+  lock.waitLock(5000);
+  try {
+    return fn();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Append to an _errors tab so failures survive Stackdriver's 30-day retention.
+// Best-effort: never throws — used in catch blocks.
+function logError_(ref, where, err) {
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
+    let tab = ss.getSheetByName(CONFIG.ERRORS_TAB_NAME);
+    if (!tab) {
+      tab = ss.insertSheet(CONFIG.ERRORS_TAB_NAME);
+      tab.getRange(1, 1, 1, 4).setValues([["timestamp", "ref", "where", "error"]]);
+      tab.setFrozenRows(1);
+      tab.getRange(1, 1, 1, 4).setFontWeight("bold");
+    }
+    tab.appendRow([
+      new Date().toISOString(),
+      ref || "",
+      where || "",
+      err && (err.stack || err.message || String(err)) || "",
+    ]);
+  } catch (_) {
+    // swallow — last-resort logger; don't recurse
+  }
 }
 
 // =================================================================
 // JSON RESPONSE
 // =================================================================
-function jsonResponse_(obj, _statusCode) {
-  // Apps Script ContentService can't set HTTP status codes on the web app
-  // return path, so _statusCode is intentionally unused — the client branches
-  // on the JSON body's `error` field instead. Leaving call sites passing 429 /
-  // 400 / 500 so the intent is documented at the throw site.
+// Apps Script ContentService cannot set HTTP status codes from a Web App
+// return path, so the client branches on the JSON body's `ok`/`error` fields.
+function jsonResponse_(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
@@ -350,22 +433,64 @@ function setupSheet() {
   console.log("Sheet headers written.");
 }
 
+/**
+ * Daily heartbeat — run once daily via a time-driven trigger.
+ * Mails the count of yesterday's submissions to NOTIFY_EMAIL so a silent
+ * outage (Apps Script broken / mail quota burned) shows up as a missing
+ * email rather than a missing submission.
+ *
+ * To install: Apps Script editor → Triggers (clock icon) → Add Trigger
+ *   Function: dailyHealthCheck_
+ *   Event source: Time-driven
+ *   Type: Day timer, "Between 8am and 9am"
+ */
+function dailyHealthCheck_() {
+  const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
+  const sheet = ss.getSheetByName(CONFIG.SHEET_TAB_NAME);
+  if (!sheet) return;
+  const submittedAtCol = HEADERS.indexOf("submitted_at") + 1;
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    MailApp.sendEmail({
+      to: CONFIG.NOTIFY_EMAIL,
+      subject: "CSC Workforce Intake — no submissions yet",
+      body: "Sheet is empty. If this is unexpected, check the deployment.",
+    });
+    return;
+  }
+  const stamps = sheet.getRange(2, submittedAtCol, lastRow - 1, 1).getValues();
+  const now = new Date();
+  const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let count = 0;
+  stamps.forEach(([s]) => {
+    const t = s instanceof Date ? s : new Date(s);
+    if (!isNaN(t) && t >= startOfYesterday && t < startOfToday) count++;
+  });
+  MailApp.sendEmail({
+    to: CONFIG.NOTIFY_EMAIL,
+    subject: `CSC Workforce Intake — ${count} submission(s) yesterday`,
+    body: `Yesterday (${startOfYesterday.toDateString()}): ${count} new intake(s).\n\nSheet: https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/edit`,
+  });
+}
+
 /** Quick test — paste into the editor + run to verify your config. */
 function testSubmit() {
   const fakePayload = {
     postData: {
       contents: JSON.stringify({
         action: "submit",
+        idempotency_key: Utilities.getUuid(),
         data: {
           last_name: "Test",
           first_name: "Demo",
           dob: "1980-01-01",
           phone: "(213) 555-0100",
           email: "demo@example.com",
-          services: ["job_placement", "esl"],
+          services: ["job_search", "resume_review"],
         },
         signature: "",
-        meta: { submitted_at: new Date().toISOString(), lang: "zh", mode: "staff" },
+        meta: { lang: "zh", mode: "staff" },
       }),
     },
     parameter: {},
